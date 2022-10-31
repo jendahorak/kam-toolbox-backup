@@ -1,0 +1,14 @@
+|   buildings_validation.pyt
+\---scripts
+    |   check_attributes.py
+    |   check_duplicates.py
+    |   check_flying.py
+    |   check_geometry.py
+    |   check_max_Z.py
+    |   copy_multipatch_with_polygon_z_attributes.py
+    |   
+    +---toolbox_utils
+    |   |   gdb_getter.py
+    |   |   messages_print.py
+    |   |   __init__.py
+
