@@ -97,7 +97,7 @@ def check_conditions(data) -> dict:
         f'PATA_VYSKA >= ABS_VYSKA': feature['PATA_VYSKA'] >= feature['ABS_VYSKA'],
         f'PATA_VYSKA >= HREBEN_VYSKA': feature['PATA_VYSKA'] >= feature['HREBEN_VYSKA'],
         f'PATA_SEG_VYSKA >= ABS_SEG_VYSKA': feature['PATA_SEG_VYSKA'] >= feature['ABS_SEG_VYSKA'],
-        f'HORIZ_VYSKA ("RIMSA_VYSKA") >= ABS_SEG_VYSKA': round(feature['HORIZ_VYSKA'], 2) >= feature['ABS_SEG_VYSKA'],
+        f'HORIZ_VYSKA ("RIMSA_VYSKA") > ABS_SEG_VYSKA': round(feature['HORIZ_VYSKA'],2) > round(feature['ABS_SEG_VYSKA'],2),
         f'PATA_SEG_VYSKA >= HORIZ_VYSKA ("RIMSA_VYSKA")': feature['PATA_SEG_VYSKA'] >= feature['HORIZ_VYSKA'],
         f'STRECHA_KOD CONTAINS INVALID VALUES': check_codelist(feature, 'STRECHA_KOD', 1, 7),
         f'PLOCHA_KOD CONTAINS INVALID VALUES': check_codelist(feature, 'PLOCHA_KOD', 1, 4),

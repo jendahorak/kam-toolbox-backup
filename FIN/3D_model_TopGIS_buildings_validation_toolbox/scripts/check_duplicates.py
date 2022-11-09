@@ -6,7 +6,6 @@ from toolbox_utils.messages_print import aprint, log_it, setup_logging
 from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms, get_gdb_path_3D_geoms_multiple
 
 
-# TODO - dodealt metadata
 class CheckDuplicates(object):
     '''
     Class as a arcgis tool abstraction in python
@@ -75,7 +74,7 @@ def check_unique(id_list_non_uniqe: List, id_list_unique: List, id_field: str) -
     '''
     Checks if given column id has duplicates, returns coresponding string. 
     '''
-    if sorted(id_list_non_uniqe) == id_list_unique:
+    if sorted(id_list_non_uniqe) == sorted(id_list_unique):
         log_it(f'FEATURE CLASS IS CORRECT - NO DUPLICATES', 'info', __name__) 
     else:
         log_it('FEATURE CLASS IS INCORRECT - HAS DUPLICATES','warning', __name__)
@@ -111,8 +110,8 @@ def inspect_columns(fc: str, cols: List[str], id_field: str) -> None:
             # list of tuples with values of given columns (cols)
             column_list = [row for row in cursor]
                 
-            abs_count_of_features = []
             for i in range(len(cols)):
+                list_of_unique = 0
                 # list of unique values of given column
                 list_of_unique = list(set([row[cols.index(cols[i])] for row in column_list]))
                 # log stats    

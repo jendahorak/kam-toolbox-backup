@@ -1,6 +1,6 @@
 # import libs
 
-import arcpy, os, sys, importlib
+import os, sys, importlib
 
 # List of directories where modules are searched
 scripts_folder = os.path.join(os.path.dirname(__file__), 'scripts')

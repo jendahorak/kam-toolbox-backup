@@ -164,10 +164,13 @@ def check_flying_buildings(input_fc:str, ground_dmr:str, workspace:str = None) -
 
 
             if dtm_diff_max >= 0:
-                bad_seg_ids.append(row[5])
+                # log_it(f'{dtm_diff_max}', 'info', __name__)
                 row[-1] = dtm_diff_max
                 row[3] = row[2] -  row[1]
-            
+                if dtm_diff_max >= 0.5:
+                    bad_seg_ids.append(int(row[5]))
+
+        
             if dtm_diff_max > 0:
                 row[4] = 'Celý segment je nad terénem'
             elif dtm_diff_max == 0:
@@ -175,11 +178,12 @@ def check_flying_buildings(input_fc:str, ground_dmr:str, workspace:str = None) -
             else:
                 # momentálně není možné
                 row[4] == 'Segment je pod terénem'    
-
+            
 
             cur.updateRow(row)
-
-    log_it(f'SEG_ID where every point of segment base is higher than DMR {bad_seg_ids}', 'info', __name__)
+    
+    log_it(f'Checking {input_fc}...', 'info', __name__)
+    log_it(f'Všechny body podstavy segmentu jsou výše nežli 0.5 m nad DMT ID_SEG: {bad_seg_ids}', 'warning', __name__)
 
 
 
@@ -191,7 +195,7 @@ def check_tables_and_fields(fc: str, zonal_stats_table_name: str, key_field: str
     if not tableExists(zonal_stats_table_name):
         log_it('Creating new zonal table...', 'info', __name__)
         building_bases = arcpy.management.SelectLayerByAttribute(fc, "NEW_SELECTION", "PLOCHA_KOD = 4")
-        # out_table = os.path.join(workspace, zonal_stats_table_name)
+        out_table = os.path.join(workspace, zonal_stats_table_name)
         arcpy.sa.ZonalStatisticsAsTable(building_bases, key_field, ground_dmr, out_table, statistics_type='MIN_MAX_MEAN')
     else:
         log_it(f'Zonal Statistics for given {fc} in {workspace} were already calculated if you wish to recalculate them choose another output workspace', 'info', __name__)

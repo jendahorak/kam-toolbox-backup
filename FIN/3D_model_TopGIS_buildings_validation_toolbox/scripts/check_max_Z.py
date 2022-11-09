@@ -42,7 +42,6 @@ class CheckMaxZ(object):
             multiValue='False'
         )
 
-
         
         input_mtp_workspace.filter.list = ["Local Database"]
         log_file_path.value = os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath)

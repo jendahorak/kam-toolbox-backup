@@ -8,6 +8,7 @@ numeric = Union[int, float]
 from toolbox_utils.messages_print import aprint, log_it, setup_logging # log_it printuje jak do arcgis console tak do souboru
 from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms, get_gdb_path_3D_geoms_multiple
 
+
 class CheckGeometry(object):
     '''
     Class as a arcgis tool abstraction in python
@@ -43,9 +44,21 @@ class CheckGeometry(object):
             multiValue='True'
         )
 
+        tolerance = arcpy.Parameter(
+            name='skewness_tolerance',
+            displayName='Specify tolernace in meters for roof skewness',
+            direction='Input',
+            datatype='GPDouble',
+            parameterType='Optional',
+            enabled='True',
+        )
         
+
+        tolerance.value = 0
+        tolerance.filter.type = "Range"
+        tolerance.filter.list = [0, 500]
         log_file_path.value = os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath)
-        params = [log_file_path, root_dir_lokalita_multiple]
+        params = [log_file_path, root_dir_lokalita_multiple, tolerance]
 
         return params
 
@@ -124,10 +137,12 @@ def no_geometry(fc_geometry_object: object, plocha_id: int) -> int:
 #     return
 
 
-def check_id_plo_attr_against_geometry(fc_geometry_object: object, plocha_kod: str, plocha_id: int, plocha_kod_spec: int=None) -> int:
+def check_id_plo_attr_against_geometry(fc_geometry_object: object, plocha_kod: str, plocha_id: int, tolerance:int,  plocha_kod_spec: int=None) -> int:
     '''
     Function takes in geometry object of given feature and checks if geometry of that object coresponds to given attribute of plocha_kod_spec:PLOCHA_TYP
     '''
+
+    # TODO - tolerance
     if plocha_kod == plocha_kod_spec:
         for part in fc_geometry_object:
                 z_vals = [pnt.Z for pnt in part]
@@ -135,9 +150,9 @@ def check_id_plo_attr_against_geometry(fc_geometry_object: object, plocha_kod: s
                 if plocha_kod_spec == 3 or plocha_kod_spec == 1:
                     if len(set(z_vals)) == 1:
                         return plocha_id
-
+                
                 elif plocha_kod_spec == 2 or plocha_kod_spec == 4:
-                    if len(set(z_vals)) != 1:
+                    if len(set(z_vals)) != 1 and (max(z_vals) - min(z_vals)) > tolerance:
                         # print(set(z_vals))
                         return plocha_id
                 else:
@@ -157,16 +172,21 @@ def check_parts_in(input_fc: str, level=None) -> List:
             # create hashtable with SEG_ID/RUIAN_IBO: [*PLOCHA_KOD]  
                 parent_object.setdefault(int(row[0]), []).append(int(row[1]))
     
+
+    ids = []
+
     if level == 'ID_SEG':
         # create list of lists segment ids that has multiple or missing base polygons
         ids = [k for k, v in parent_object.items() if v.count(4) != 1]
     elif level == 'RUIAN_IBO':
-        ids = [k for k, v in parent_object.items() if not any(x in v for x in [2,3])]
+        for k, v in parent_object.items():
+            if v.count(2) + v.count(3) == 0:
+                ids.append(k)
 
     return ids
 
 
-def build_stats(input_fc: str) -> None:
+def build_stats(input_fc: str, tolerance) -> None:
     '''
     Runtime function for chekcing geometry conditions
     '''
@@ -189,7 +209,7 @@ def build_stats(input_fc: str) -> None:
                 stats.setdefault('plochy_bez_geometrie', []).append(no_geom_ids)
 
             for k, v in plocha_kod_types.items():
-                curr_invalid_id_plo = check_id_plo_attr_against_geometry(geometry_object, plocha_kod, plocha_id, plocha_kod_spec=v)
+                curr_invalid_id_plo = check_id_plo_attr_against_geometry(geometry_object, plocha_kod, plocha_id, tolerance=tolerance, plocha_kod_spec=v)
                 if curr_invalid_id_plo:
                     stats.setdefault(f'attribut_{k}_se_neshoduje_s_geometrii_ploch_ID-PLO', []).append(curr_invalid_id_plo)
     
@@ -212,7 +232,7 @@ def log_out_stats(stats: dict, fc_name:str)-> None:
         log_it(f'{fc_name} geometry is correct', 'info', __name__)     
 
 
-def main(log_dir_path: str, location_root_folder_paths: str) -> None:
+def main(log_dir_path: str, location_root_folder_paths: str, tolerance:int = 0) -> None:
     '''
     Main runtime.
     '''
@@ -227,7 +247,7 @@ def main(log_dir_path: str, location_root_folder_paths: str) -> None:
         log_it(f'Checking {location_folder}', 'info', __name__)
         polygonZgdb = get_gdb_path_3D_geoms(location_folder, geoms[0]) 
         cur_fc = get_fc_from_gdb_within_dataset(polygonZgdb)
-        log_out_stats(build_stats(cur_fc),cur_fc) 
+        log_out_stats(build_stats(cur_fc, float(tolerance)),cur_fc) 
 
 
 

@@ -1,10 +1,5 @@
-import arcpy
 import os
 from typing import List
-
-
-f = r"I:\04_Hall_of_Fame\11_Honza_H\00_Projekty\12_3D_model_validation_refactoring\02_Input_Data\TOPGIS\2022\UNZIPs\Lokalita_43_2022_08_11"
-# TODO - predelat do moznosti to get multiple gbs
 
 def get_gdb_path_3D_geoms(location_folder: str, geometry: str) -> str:
     '''
@@ -21,7 +16,6 @@ def get_gdb_path_3D_geoms(location_folder: str, geometry: str) -> str:
             print('Geometry wasnt specified correctly.')
 
 
-# TODO - dat pryc log
 
 def get_gdb_path_3D_geoms_multiple(locality_folder_path: str, desired_geoms: List[str], tool_name) -> List:
     '''
