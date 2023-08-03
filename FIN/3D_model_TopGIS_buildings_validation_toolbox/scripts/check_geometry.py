@@ -7,6 +7,7 @@ from typing import (List, Union)
 numeric = Union[int, float]
 from toolbox_utils.messages_print import aprint, log_it, setup_logging # log_it printuje jak do arcgis console tak do souboru
 from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms, get_gdb_path_3D_geoms_multiple
+from toolbox_utils.clear_selection import clear_selection
 
 
 class CheckGeometry(object):
@@ -247,6 +248,7 @@ def main(log_dir_path: str, location_root_folder_paths: str, tolerance:int = 0) 
         log_it(f'Checking {location_folder}', 'info', __name__)
         polygonZgdb = get_gdb_path_3D_geoms(location_folder, geoms[0]) 
         cur_fc = get_fc_from_gdb_within_dataset(polygonZgdb)
+        clear_selection(cur_fc)
         log_out_stats(build_stats(cur_fc, float(tolerance)),cur_fc) 
 
 

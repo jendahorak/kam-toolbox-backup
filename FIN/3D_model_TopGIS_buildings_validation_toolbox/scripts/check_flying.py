@@ -6,6 +6,7 @@ from typing import (List, Union)
 numeric = Union[int, float]
 from toolbox_utils.messages_print import aprint, log_it, setup_logging # log_it printuje jak do arcgis console tak do souboru
 from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms, get_gdb_path_3D_geoms_multiple
+from toolbox_utils.clear_selection import clear_selection
 
 class CheckFlyingBuildings(object):
     '''
@@ -253,13 +254,18 @@ def main(log_dir_path: str, input_ground_DMR: str, location_root_folder_paths: s
     # setup file logging
     init_logging(log_dir_path)
 
+    log_it(location_root_folder_paths, 'info', __name__)
+
     # copy PolygonZ fcs to specified output workspace
     aggregate_into_new_workspace(location_root_folder_paths, path_to_copy_analysis_workspace, input_ground_DMR)
 
 #   # change workspace to output workspace
     arcpy.env.workspace = path_to_copy_analysis_workspace
+    # log_it(path_to_copy_analysis_workspace,)
     for fc in arcpy.ListFeatureClasses():
+        # log_it(fc)
         dirname = os.path.dirname(arcpy.Describe(fc).catalogPath)
+        clear_selection(fc)
         check_flying_buildings(fc, input_ground_DMR, dirname)
         pass
 

@@ -3,6 +3,7 @@ from typing import (List, Union)
 numeric = Union[int, float]
 from toolbox_utils.messages_print import aprint, log_it, setup_logging
 from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms
+from toolbox_utils.clear_selection import clear_selection
 
 class CheckAttributeValues(object):
     '''
@@ -96,6 +97,7 @@ def check_conditions(data) -> dict:
         # TODO - check if segment has all same
         f'PATA_VYSKA >= ABS_VYSKA': feature['PATA_VYSKA'] >= feature['ABS_VYSKA'],
         f'PATA_VYSKA >= HREBEN_VYSKA': feature['PATA_VYSKA'] >= feature['HREBEN_VYSKA'],
+        f'PATA_VYSKA >= HORIZ_VYSKA ("RIMSA_VYSKA")': feature['PATA_VYSKA'] >= feature['HORIZ_VYSKA'],
         f'PATA_SEG_VYSKA >= ABS_SEG_VYSKA': feature['PATA_SEG_VYSKA'] >= feature['ABS_SEG_VYSKA'],
         f'HORIZ_VYSKA ("RIMSA_VYSKA") > ABS_SEG_VYSKA': round(feature['HORIZ_VYSKA'],2) > round(feature['ABS_SEG_VYSKA'],2),
         f'PATA_SEG_VYSKA >= HORIZ_VYSKA ("RIMSA_VYSKA")': feature['PATA_SEG_VYSKA'] >= feature['HORIZ_VYSKA'],
@@ -146,6 +148,9 @@ def init_logging(log_dir_path: str) -> None:
     class_name = CheckAttributeValues().name.replace(' ', '_')
     setup_logging(log_dir_path,class_name, __name__)
 
+
+
+
 def main(log_dir_path: str, location_root_folder_paths: str) -> None:
     '''
     Main runtime - establishes required columns, required geometry.
@@ -166,6 +171,8 @@ def main(log_dir_path: str, location_root_folder_paths: str) -> None:
 
         for dat in datasets:
             for fc in arcpy.ListFeatureClasses('', '', dat):
+                clear_selection(fc)
+                log_it('Inspecting attributes...', 'info', __name__)
                 inspect_attributes(fc=fc, cols=required_cols)
     
 

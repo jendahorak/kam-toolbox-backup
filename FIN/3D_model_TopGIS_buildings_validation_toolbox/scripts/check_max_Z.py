@@ -6,6 +6,7 @@ from typing import (List, Union)
 numeric = Union[int, float]
 from toolbox_utils.messages_print import aprint, log_it, setup_logging # log_it printuje jak do arcgis console tak do souboru
 from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms, get_gdb_path_3D_geoms_multiple
+from toolbox_utils.clear_selection import clear_selection
 
 # TODO - optional file logging
 class CheckMaxZ(object):
@@ -188,6 +189,7 @@ def main(log_dir_path: str, input_mtp_workspace: str, *args) -> None:
         mtp_fcs = arcpy.ListFeatureClasses(feature_type='Multipatch')
         if mtp_fcs:
             for fc in mtp_fcs:
+                clear_selection(fc)
                 log_it(fc, 'info', __name__)
                 max_z_check(fc)
         else: 

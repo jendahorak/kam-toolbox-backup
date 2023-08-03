@@ -4,6 +4,7 @@ import arcpy
 from typing import List
 from toolbox_utils.messages_print import aprint, log_it, setup_logging
 from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms, get_gdb_path_3D_geoms_multiple
+from toolbox_utils.clear_selection import clear_selection
 
 
 class CheckDuplicates(object):
@@ -134,6 +135,7 @@ def init_logging(log_dir_path: str) -> object:
     setup_logging(log_dir_path,class_name, __name__)
 
 
+
 def main(log_dir_path: str, location_root_folder_paths: str) -> None:
     '''
     Establishes required field names for PolygonZ and Multipatch FeatureClass. Loops thru GDBs and datasets, checks for missing columns, duplicates and prints out statistics. 
@@ -150,6 +152,7 @@ def main(log_dir_path: str, location_root_folder_paths: str) -> None:
     # init logging
     init_logging(log_dir_path)
 
+
     # works for multiple input location root folders
     for location_folder in location_root_folder_paths.split(';'):
         # gets gdb paths 
@@ -160,10 +163,11 @@ def main(log_dir_path: str, location_root_folder_paths: str) -> None:
             log_it(f'Checking {location_folder}', 'info', __name__)
             arcpy.env.workspace = gdb
             datasets = arcpy.ListDatasets()
-
             for dat in datasets:
                 for fc in arcpy.ListFeatureClasses("", "", dat):
                     log_it(f"CURRENT FEATURE CLASS: {fc} \nCURRENT DATASET: {dat}",'info',__name__)
+                    clear_selection(fc)
+
                     if fc.startswith(f"lokalita"):
                         inspect_columns(fc, cols_fc_budovy, cols_fc_budovy[-1])
                     elif fc.startswith("multipatch"):
