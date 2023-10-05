@@ -32,7 +32,7 @@ class CheckAttributeValues(object):
             name="in_dir_multiple",
             displayName="Path location of root folders (e.g.: Lokalita_00_YYYY_MM_DD)",
             direction='Input',
-            datatype=['DEFolder', 'GPFeatureLayer'],
+            datatype=['DEFolder'],
             parameterType='Required',
             enabled='True',
             multiValue='True'
