@@ -32,7 +32,7 @@ class CheckAttributeValues(object):
             name="in_dir_multiple",
             displayName="Path location of root folders (e.g.: Lokalita_00_YYYY_MM_DD)",
             direction='Input',
-            datatype='DEFolder',
+            datatype=['DEFolder', 'GPFeatureLayer'],
             parameterType='Required',
             enabled='True',
             multiValue='True'
@@ -83,12 +83,12 @@ def log_out_problematic_features(problematic_features: dict, column_dicts) -> No
 def check_codelist(feature, column, start, stop,  ) -> bool:
     return True if feature[f'{column}'] not in range(start,stop+1) else False
 
-def check_conditions(data) -> dict:
+def check_conditions(data, cols:List[str]) -> dict:
     '''
     Checks defined conditions for given columns - return dictionary with faulty features 
     '''
-    # TODO - otestovat
     problems = {}
+
 
     for feature in data:
         conditions = {
@@ -101,7 +101,8 @@ def check_conditions(data) -> dict:
         f'PATA_SEG_VYSKA >= HORIZ_VYSKA ("RIMSA_VYSKA")': feature['PATA_SEG_VYSKA'] >= feature['HORIZ_VYSKA'],
         f'STRECHA_KOD CONTAINS INVALID VALUES': check_codelist(feature, 'STRECHA_KOD', 1, 7),
         f'PLOCHA_KOD CONTAINS INVALID VALUES': check_codelist(feature, 'PLOCHA_KOD', 1, 4),
-        f'CAST_OBJEKTU CONTAINS INVALID VALUES': check_codelist(feature, 'CAST_OBJEKTU', 1, 5)
+        f'CAST_OBJEKTU CONTAINS INVALID VALUES': check_codelist(feature, 'CAST_OBJEKTU', 1, 5),
+            
         }
         for cond_name, cond_val in conditions.items():
             if cond_val:
@@ -128,7 +129,10 @@ def inspect_attributes(fc: str, cols: List[str]) -> None:
     try:
         with arcpy.da.SearchCursor(fc, cols) as cursor:
             column_dicts = search_cursor_tuple_to_dict_colmn_name_keys(cursor, cols)
+            log_it(f'{column_dicts}' ,'warning',__name__)
+
             log_out_problematic_features(check_conditions(column_dicts), column_dicts) 
+
 
     # check if column missing in fc 
     except RuntimeError:
