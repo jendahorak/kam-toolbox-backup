@@ -207,15 +207,15 @@ def main(log_dir_path: str, location_root_folder_paths: str) -> None:
 
         for dat in datasets:
             for fc in arcpy.ListFeatureClasses('', '', dat):
-                inspect_attributes(fc=fc, cols=required_cols_old_specifickace)
+                inspect_attributes(fc=fc, cols=required_cols)
     
 
 ###################################################
 ############# Run the tool from IDE ###############
-folder_null = r'I:\02_Projekty\17_model_3D\01_Zdrojova_data\01_Externi\TOPGIS\2020\UNZIPs\lokality\Lokalita_14'
-folder = r'I:\04_Hall_of_Fame\11_Honza_H\00_Projekty\12_3D_model_validation_refactoring\02_Input_Data\TOPGIS_2023_10_3\Lokalita_94_2023_10_03'
-logs = r'I:\04_Hall_of_Fame\11_Honza_H\00_Projekty\12_3D_model_validation_refactoring\01_Developement\00_GIS\Budovy_Validation_project'
+# folder_null = r'I:\02_Projekty\17_model_3D\01_Zdrojova_data\01_Externi\TOPGIS\2020\UNZIPs\lokality\Lokalita_14'
+# folder = r'I:\04_Hall_of_Fame\11_Honza_H\00_Projekty\12_3D_model_validation_refactoring\02_Input_Data\TOPGIS_2023_10_3\Lokalita_94_2023_10_03'
+# logs = r'I:\04_Hall_of_Fame\11_Honza_H\00_Projekty\12_3D_model_validation_refactoring\01_Developement\00_GIS\Budovy_Validation_project'
 
-main(logs, folder_null)
+# main(logs, folder_null)
 
 ####################################################
