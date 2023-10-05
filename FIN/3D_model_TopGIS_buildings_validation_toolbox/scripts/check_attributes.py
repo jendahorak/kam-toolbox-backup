@@ -74,16 +74,39 @@ def log_out_problematic_features(problematic_features: dict, column_dicts) -> No
         for problem_k, problem_v in problematic_features.items():
             if len(problem_v) == len(column_dicts):
                 log_it(f'Problem {problem_k} found in all features in featureclass', 'warning', __name__)
+            elif(len(problem_v) > 50):
+                log_it(f'Problem {problem_k} found in more than 50 ID_PLO: {problem_v[:50]}', 'warning', __name__)
+                log_it(f'Due to large amount, not all results have been prited into the console, please check the data manualy', 'warning', __name__)
             else:
                 log_it(f'Problem {problem_k} occured in ID_PLO: {problem_v}', 'warning', __name__)
+    
     else:
         log_it('Attribute values are correct', 'info', __name__)
     return
 
+
+
+
+
+
+def decide_rimsa_column_name(fc:dict) -> str:
+    conflicting_col_name = 'RIMSA_VYSKA'
+    if 'HORIZ_VYSKA' in fc.keys():
+        conflicting_col_name = 'HORIZ_VYSKA'
+    return conflicting_col_name
+
 def check_codelist(feature, column, start, stop,  ) -> bool:
     return True if feature[f'{column}'] not in range(start,stop+1) else False
 
-def check_conditions(data, cols:List[str]) -> dict:
+
+
+def evaluate_conds(conds, feature, problems):
+    for cond_name, cond_val in conds.items():
+        if cond_val:
+            problems.setdefault(cond_name, []).append(feature['ID_PLO'])
+    return problems
+
+def check_conditions(data) -> dict:
     '''
     Checks defined conditions for given columns - return dictionary with faulty features 
     '''
@@ -91,23 +114,33 @@ def check_conditions(data, cols:List[str]) -> dict:
 
 
     for feature in data:
-        conditions = {
-        # TODO - check for  non null
-        # TODO - check if segment has all same
-        f'PATA_VYSKA >= ABS_VYSKA': feature['PATA_VYSKA'] >= feature['ABS_VYSKA'],
-        f'PATA_VYSKA >= HREBEN_VYSKA': feature['PATA_VYSKA'] >= feature['HREBEN_VYSKA'],
-        f'PATA_SEG_VYSKA >= ABS_SEG_VYSKA': feature['PATA_SEG_VYSKA'] >= feature['ABS_SEG_VYSKA'],
-        f'HORIZ_VYSKA ("RIMSA_VYSKA") > ABS_SEG_VYSKA': round(feature['HORIZ_VYSKA'],2) > round(feature['ABS_SEG_VYSKA'],2),
-        f'PATA_SEG_VYSKA >= HORIZ_VYSKA ("RIMSA_VYSKA")': feature['PATA_SEG_VYSKA'] >= feature['HORIZ_VYSKA'],
-        f'STRECHA_KOD CONTAINS INVALID VALUES': check_codelist(feature, 'STRECHA_KOD', 1, 7),
-        f'PLOCHA_KOD CONTAINS INVALID VALUES': check_codelist(feature, 'PLOCHA_KOD', 1, 4),
-        f'CAST_OBJEKTU CONTAINS INVALID VALUES': check_codelist(feature, 'CAST_OBJEKTU', 1, 5),
-            
-        }
-        for cond_name, cond_val in conditions.items():
-            if cond_val:
-                problems.setdefault(cond_name, []).append(feature['ID_PLO'])
-    return problems
+        conditions = {}
+        has_null = False
+        conflicting_col_name = decide_rimsa_column_name(feature)
+
+        for col, val in feature.items():
+            if val is None:
+                has_null = True
+                conditions[f'NULL VALUES FOUND IN {col}'] = True
+
+        if not has_null:
+            conditions = {
+                'PATA_VYSKA >= ABS_VYSKA': feature['PATA_VYSKA'] >= feature['ABS_VYSKA'],
+                'PATA_VYSKA >= HREBEN_VYSKA': feature['PATA_VYSKA'] >= feature['HREBEN_VYSKA'],
+                'PATA_SEG_VYSKA >= ABS_SEG_VYSKA': feature['PATA_SEG_VYSKA'] >= feature['ABS_SEG_VYSKA'],
+                'HORIZ_VYSKA ("RIMSA_VYSKA") > ABS_SEG_VYSKA': round(feature[f'{conflicting_col_name}'], 2) > round(feature['ABS_SEG_VYSKA'], 2),
+                'PATA_SEG_VYSKA >= HORIZ_VYSKA ("RIMSA_VYSKA")': feature['PATA_SEG_VYSKA'] >= feature[f'{conflicting_col_name}'],
+                'STRECHA_KOD CONTAINS INVALID VALUES': check_codelist(feature, 'STRECHA_KOD', 1, 7),
+                'PLOCHA_KOD CONTAINS INVALID VALUES': check_codelist(feature, 'PLOCHA_KOD', 1, 4),
+            }
+
+        # Check if 'CAST_OBJEKTU' exists before adding its condition
+        if 'CAST_OBJEKTU' in feature:
+            conditions['CAST_OBJEKTU CONTAINS INVALID VALUES'] = check_codelist(feature, 'CAST_OBJEKTU', 1, 5)
+
+        problems_out = evaluate_conds(conditions, feature, problems)
+
+    return problems_out
     
 def search_cursor_tuple_to_dict_colmn_name_keys(cursor, cols) -> List[dict]:
     ''' 
@@ -126,11 +159,11 @@ def inspect_attributes(fc: str, cols: List[str]) -> None:
     '''
     Loop over all features of given feature class (fc) and specified columns.
     '''
+
+
     try:
         with arcpy.da.SearchCursor(fc, cols) as cursor:
             column_dicts = search_cursor_tuple_to_dict_colmn_name_keys(cursor, cols)
-            log_it(f'{column_dicts}' ,'warning',__name__)
-
             log_out_problematic_features(check_conditions(column_dicts), column_dicts) 
 
 
@@ -153,7 +186,11 @@ def init_logging(log_dir_path: str) -> None:
 def main(log_dir_path: str, location_root_folder_paths: str) -> None:
     '''
     Main runtime - establishes required columns, required geometry.
-    '''
+    # '''
+
+
+    # TODO - NUTNE VYRESIT V DATECH TAKHLE TO NEJDE
+    required_cols_old_specifickace = ["OBJECTID", "RUIAN_IBO","ID_SEG", "ID_PLO", 'PATA_VYSKA', 'HREBEN_VYSKA', 'ABS_VYSKA','STRECHA_KOD', 'PATA_SEG_VYSKA', 'ABS_SEG_VYSKA', 'PLOCHA_KOD', 'RIMSA_VYSKA']
     required_cols = ["OBJECTID", "RUIAN_IBO","ID_SEG", "ID_PLO", 'PATA_VYSKA', 'HREBEN_VYSKA', 'ABS_VYSKA','HORIZ_VYSKA', 'STRECHA_KOD', 'PATA_SEG_VYSKA', 'ABS_SEG_VYSKA', 'PLOCHA_KOD', 'CAST_OBJEKTU']
     geoms = ['PolygonZ', 'Multipatch']
 
@@ -170,13 +207,15 @@ def main(log_dir_path: str, location_root_folder_paths: str) -> None:
 
         for dat in datasets:
             for fc in arcpy.ListFeatureClasses('', '', dat):
-                inspect_attributes(fc=fc, cols=required_cols)
+                inspect_attributes(fc=fc, cols=required_cols_old_specifickace)
     
 
 ###################################################
 ############# Run the tool from IDE ###############
-# location_root_folder_paths_broken = fr'I:\04_Hall_of_Fame\11_Honza_H\00_Projekty\12_3D_model_validation_refactoring\02_Input_Data\Broken_for_testing\PolygonZ_lokality_root_folders_broken\Lokalita_45_2022_08_11'
-# log_file_path = r'I:\04_Hall_of_Fame\11_Honza_H\00_Projekty\12_3D_model_validation_refactoring\01_Developement\02_Output\test_logs'  # bude parameter
-# main(log_file_path, location_root_folder_paths=location_root_folder_paths_broken)
+folder_null = r'I:\02_Projekty\17_model_3D\01_Zdrojova_data\01_Externi\TOPGIS\2020\UNZIPs\lokality\Lokalita_14'
+folder = r'I:\04_Hall_of_Fame\11_Honza_H\00_Projekty\12_3D_model_validation_refactoring\02_Input_Data\TOPGIS_2023_10_3\Lokalita_94_2023_10_03'
+logs = r'I:\04_Hall_of_Fame\11_Honza_H\00_Projekty\12_3D_model_validation_refactoring\01_Developement\00_GIS\Budovy_Validation_project'
+
+main(logs, folder_null)
 
 ####################################################
