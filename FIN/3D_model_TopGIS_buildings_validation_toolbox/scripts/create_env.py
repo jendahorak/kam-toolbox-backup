@@ -40,7 +40,7 @@ class CopyFoldersForValidaton(object):
 
         destination_folder = arcpy.Parameter(
             name='dest_folder',
-            displayName="Path to folder where locations will be copied to",
+            displayName="Path to folder where locations will be copied to. If not specified .\DATA folder will be created at the root of ArcGIS project folder",
             direction='Input',
             datatype=['DEFolder'],
             parameterType='Optional',
@@ -104,7 +104,9 @@ def main(log_dir_path: str, location_root_folder_paths: str, destination_folder:
 
     # setup file logging
     init_logging(log_dir_path)
-    log_it(log_dir_path, 'info', __name__)
+
+    
+    log_it(f'Log files going to be save into: {log_dir_path}', 'info', __name__)
 
 
     if destination_folder is None:
@@ -112,6 +114,13 @@ def main(log_dir_path: str, location_root_folder_paths: str, destination_folder:
         createFolder(data_folder)
     else:
         data_folder = destination_folder
+
+
+    arcpy.management.CreateFileGDB(data_folder, 'PolygonZ_DMR_attributes')
+    log_it(f'Output GDB for tool 4. PolygonZ manipulation - Check difference between geometry and DMR. created in .\DATA', 'info', __name__)
+
+    arcpy.management.CreateFileGDB(data_folder, 'Multipatch_attributes')
+    log_it(f'Output GDB for tool 5. Multipatch manipulation - Copy multipatch and join PolygonZ attributes. created in .\DATA', 'info', __name__)
 
 
 
@@ -123,7 +132,7 @@ def main(log_dir_path: str, location_root_folder_paths: str, destination_folder:
             shutil.copytree(location_folder, dest)
             log_it(f"Folder '{os.path.basename(location_folder)}' copied to '{dest}'", 'info', __name__)
         except Exception as e:
-            log_it(f"Error copying folder {os.path.basename(location_folder)}", 'warning', __name__) 
+            log_it(f"Error copying folder {os.path.basename(location_folder)} Folder already exists.", 'warning', __name__) 
 
 ###################################################
 ############# Run the tool from IDE ###############
