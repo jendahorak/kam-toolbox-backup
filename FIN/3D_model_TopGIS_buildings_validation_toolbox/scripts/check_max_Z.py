@@ -45,7 +45,8 @@ class CheckMaxZ(object):
 
         
         input_mtp_workspace.filter.list = ["Local Database"]
-        log_file_path.value = os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath)
+        log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
+
         params = [log_file_path, input_mtp_workspace]
 
         return params

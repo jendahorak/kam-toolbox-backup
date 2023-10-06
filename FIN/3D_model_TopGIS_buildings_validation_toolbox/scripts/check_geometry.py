@@ -58,7 +58,8 @@ class CheckGeometry(object):
         tolerance.value = 0
         tolerance.filter.type = "Range"
         tolerance.filter.list = [0, 500]
-        log_file_path.value = os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath)
+        log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
+
         params = [log_file_path, root_dir_lokalita_multiple, tolerance]
 
         return params
