@@ -97,7 +97,7 @@ def decide_rimsa_column_name(fc:dict) -> str:
         conflicting_col_name = 'HORIZ_VYSKA'
     return conflicting_col_name
 
-def check_codelist(feature, column, start, stop,  ) -> bool:
+def check_codelist(feature, column, start, stop) -> bool:
     return True if feature[f'{column}'] not in range(start,stop+1) else False
 
 
@@ -177,8 +177,6 @@ def inspect_attributes(fc: str, cols: List[str]) -> None:
         log_it(f'!! Attributes checking for {fc} aborted. Please repair {fc} !!','warning',__name__)
 
     pass
-
-
 
 
 def check_feature_class_columns(fc, required_cols):

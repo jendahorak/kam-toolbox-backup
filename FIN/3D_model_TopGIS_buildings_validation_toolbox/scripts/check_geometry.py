@@ -197,8 +197,8 @@ def build_stats(input_fc: str, tolerance) -> None:
         for row in cursor:
 
             geometry_object = row[1]
-            plocha_kod = row[2]
-            plocha_id = row[3]    
+            plocha_kod = int(row[2])
+            plocha_id = int(row[3])    
             # log_it(f'build_stats looping {input_fc}, geom_obj: {geometry_object}, plocha_id {plocha_id}', 'info', __name__)
 
             no_geom_ids = no_geometry(geometry_object, plocha_id)
