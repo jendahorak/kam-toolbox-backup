@@ -168,7 +168,7 @@ def inspect_attributes(fc: str, cols: List[str]) -> None:
             column_dicts = search_cursor_tuple_to_dict_colmn_name_keys(cursor, cols)
             log_out_problematic_features(check_conditions(column_dicts), column_dicts) 
 
-
+    # TODO - Dát tohle pryč - redundantni kdyz existuje check_feature_class_columns()
     # check if column missing in fc 
     except RuntimeError:
         missing = set(cols) - set([str(x.name) for x in arcpy.ListFields(fc)])
@@ -177,6 +177,25 @@ def inspect_attributes(fc: str, cols: List[str]) -> None:
         log_it(f'!! Attributes checking for {fc} aborted. Please repair {fc} !!','warning',__name__)
 
     pass
+
+
+
+
+def check_feature_class_columns(fc, required_cols):
+    existing_cols = set(field.name for field in arcpy.ListFields(fc))
+    missing_cols = set(required_cols) - existing_cols
+    extra_cols = existing_cols - set(required_cols)
+
+    if missing_cols:
+        log_it(f"Missing columns in the feature class {fc}: {', '.join(missing_cols)}", 'warning', __name__)
+        return False
+
+    if extra_cols:
+        log_it(f"Extra columns found in the feature class {fc}: {', '.join(extra_cols)}"), 'warning', __name__
+        return False
+
+    return True
+
 
 def init_logging(log_dir_path: str) -> None:
     '''
@@ -209,7 +228,12 @@ def main(log_dir_path: str, location_root_folder_paths: str) -> None:
 
         for dat in datasets:
             for fc in arcpy.ListFeatureClasses('', '', dat):
-                inspect_attributes(fc=fc, cols=required_cols)
+                
+                if check_feature_class_columns(fc, required_cols): 
+                    return
+                else:
+                    inspect_attributes(fc=fc, cols=required_cols)
+
     
 
 ###################################################
