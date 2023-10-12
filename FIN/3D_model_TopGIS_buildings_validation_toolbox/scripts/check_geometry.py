@@ -144,7 +144,6 @@ def check_id_plo_attr_against_geometry(fc_geometry_object: object, plocha_kod: s
     Function takes in geometry object of given feature and checks if geometry of that object coresponds to given attribute of plocha_kod_spec:PLOCHA_TYP
     '''
 
-    # TODO - tolerance
     if plocha_kod == plocha_kod_spec:
         for part in fc_geometry_object:
                 z_vals = [pnt.Z for pnt in part]
@@ -158,7 +157,7 @@ def check_id_plo_attr_against_geometry(fc_geometry_object: object, plocha_kod: s
                         # print(set(z_vals))
                         return plocha_id
                 else:
-                    log_it('Input parameeters were specified incorectly', 'warning', __name__)
+                    log_it('Input parameters were specified incorectly', 'warning', __name__)
  
   
 

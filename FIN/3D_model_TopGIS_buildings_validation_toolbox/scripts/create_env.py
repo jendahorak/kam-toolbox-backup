@@ -131,8 +131,13 @@ def main(log_dir_path: str, location_root_folder_paths: str, destination_folder:
             # Copy the entire folder and its contents
             shutil.copytree(location_folder, dest)
             log_it(f"Folder '{os.path.basename(location_folder)}' copied to '{dest}'", 'info', __name__)
+
         except Exception as e:
-            log_it(f"Error copying folder {os.path.basename(location_folder)} Folder already exists.", 'warning', __name__) 
+            if "Permission denied" in str(e):
+                # Catch the Permission denied error and log a custom message
+                log_it(f"Permission denied when copying folder: {str(e)} /n original layer is probably opened and being edited containing .lock", 'warning', __name__)
+            else:
+                log_it(f"Error copying folder {os.path.basename(location_folder)}: {str(e)}", 'warning', __name__)
 
 ###################################################
 ############# Run the tool from IDE ###############
