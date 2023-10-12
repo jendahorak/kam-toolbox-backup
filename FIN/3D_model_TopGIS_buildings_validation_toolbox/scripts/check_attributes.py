@@ -11,7 +11,7 @@ class CheckAttributeValues(object):
 
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "2. PolygonZ manipulation - Check Attribute Values"
+        self.label = "2. PolygonZ manipulation - Validate attribute schema and values"
         self.name = 'Check Attribute Values'
         self.description = ""
         self.canRunInBackground = False
@@ -191,7 +191,7 @@ def check_feature_class_columns(fc, required_cols):
         return False
 
     if extra_cols:
-        log_it(f"Extra columns found in the feature class {fc}: {', '.join(extra_cols)}"), 'warning', __name__
+        log_it(f"Extra columns found in the feature class {fc}: {', '.join(extra_cols)}", 'warning', __name__)
         return False
 
     return True
@@ -211,8 +211,7 @@ def main(log_dir_path: str, location_root_folder_paths: str) -> None:
 
 
     # TODO - NUTNE VYRESIT V DATECH TAKHLE TO NEJDE
-    required_cols_old_specifickace = ["OBJECTID", "RUIAN_IBO","ID_SEG", "ID_PLO", 'PATA_VYSKA', 'HREBEN_VYSKA', 'ABS_VYSKA','STRECHA_KOD', 'PATA_SEG_VYSKA', 'ABS_SEG_VYSKA', 'PLOCHA_KOD', 'RIMSA_VYSKA']
-    required_cols = ["OBJECTID", "RUIAN_IBO","ID_SEG", "ID_PLO", 'PATA_VYSKA', 'HREBEN_VYSKA', 'ABS_VYSKA','HORIZ_VYSKA', 'STRECHA_KOD', 'PATA_SEG_VYSKA', 'ABS_SEG_VYSKA', 'PLOCHA_KOD', 'CAST_OBJEKTU']
+    required_cols = ["OBJECTID", "RUIAN_IBO","ID_SEG", "ID_PLO", 'PATA_VYSKA', 'HREBEN_VYSKA', 'ABS_VYSKA','HORIZ_VYSKA', 'STRECHA_KOD', 'PATA_SEG_VYSKA', 'ABS_SEG_VYSKA', 'PLOCHA_KOD', 'CAST_OBJEKTU', 'SHAPE_Area', 'SHAPE_Length', 'SHAPE']
     geoms = ['PolygonZ', 'Multipatch']
 
     # setup file logging
@@ -230,9 +229,9 @@ def main(log_dir_path: str, location_root_folder_paths: str) -> None:
             for fc in arcpy.ListFeatureClasses('', '', dat):
                 
                 if check_feature_class_columns(fc, required_cols): 
-                    return
-                else:
                     inspect_attributes(fc=fc, cols=required_cols)
+                else:
+                    return
 
     
 

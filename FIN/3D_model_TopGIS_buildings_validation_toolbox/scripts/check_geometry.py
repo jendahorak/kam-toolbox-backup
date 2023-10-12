@@ -139,27 +139,18 @@ def no_geometry(fc_geometry_object: object, plocha_id: int) -> int:
 #     return
 
 
-def check_id_plo_attr_against_geometry(fc_geometry_object: object, plocha_kod: str, plocha_id: int, tolerance:int,  plocha_kod_spec: int=None) -> int:
-    '''
-    Function takes in geometry object of given feature and checks if geometry of that object coresponds to given attribute of plocha_kod_spec:PLOCHA_TYP
-    '''
-
+def check_id_plo_attr_against_geometry(fc_geometry_object: object, plocha_kod: str, plocha_id: int, tolerance: int, plocha_kod_spec: int = None) -> int:
     if plocha_kod == plocha_kod_spec:
         for part in fc_geometry_object:
-                z_vals = [pnt.Z for pnt in part]
-                x_vals = [pnt.X for pnt in part]
+                z_vals = [pnt.Z for pnt in part if pnt]
                 if plocha_kod_spec == 3 or plocha_kod_spec == 1:
                     if len(set(z_vals)) == 1:
                         return plocha_id
-                
                 elif plocha_kod_spec == 2 or plocha_kod_spec == 4:
                     if len(set(z_vals)) != 1 and (max(z_vals) - min(z_vals)) > tolerance:
-                        # print(set(z_vals))
                         return plocha_id
                 else:
-                    log_it('Input parameters were specified incorectly', 'warning', __name__)
- 
-  
+                    log_it('Input parameters were specified incorrectly', 'warning', __name__)
 
 def check_parts_in(input_fc: str, level=None) -> List:
     '''
@@ -191,6 +182,9 @@ def build_stats(input_fc: str, tolerance) -> None:
     '''
     Runtime function for chekcing geometry conditions
     '''
+
+    log_it(f'build_stats ran {input_fc}, {tolerance}', 'info', __name__)
+
     stats = {}
     plocha_kod_types = {
         'svisla-stena': 1,
@@ -201,9 +195,11 @@ def build_stats(input_fc: str, tolerance) -> None:
 
     with arcpy.da.SearchCursor(input_fc, ["OID@", "SHAPE@", "PLOCHA_KOD", "ID_PLO", "ID_SEG"]) as cursor:
         for row in cursor:
+
             geometry_object = row[1]
             plocha_kod = row[2]
             plocha_id = row[3]    
+            # log_it(f'build_stats looping {input_fc}, geom_obj: {geometry_object}, plocha_id {plocha_id}', 'info', __name__)
 
             no_geom_ids = no_geometry(geometry_object, plocha_id)
             if no_geom_ids:
@@ -214,6 +210,9 @@ def build_stats(input_fc: str, tolerance) -> None:
                 if curr_invalid_id_plo:
                     stats.setdefault(f'attribut_{k}_se_neshoduje_s_geometrii_ploch_ID-PLO', []).append(curr_invalid_id_plo)
     
+    log_it(f'check_id_plo_attr_finished {input_fc}, {tolerance}', 'info', __name__)
+
+
     stats['segmenty_bez_nebo_s_vice_nezli_jednim_polygonem_pro_plochu_zakladova_deska_ID-SEG'] = check_parts_in(input_fc, level='ID_SEG')
     stats['budovy_bez_stresni_plochy_RUIAN-IBO'] = check_parts_in(input_fc, level='RUIAN_IBO')
     
