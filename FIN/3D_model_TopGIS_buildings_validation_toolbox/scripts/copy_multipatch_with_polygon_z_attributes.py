@@ -136,8 +136,8 @@ def main(log_dir_path: str, location_root_folder_paths: str, output_mtp_workspac
 
     fields_to_be_joined = ['RUIAN_IBO', 'STRECHA_KOD',
                            'PATA_SEG_VYSKA', 'HORIZ_VYSKA', 'ABS_SEG_VYSKA']
-    fields_to_be_deleted = ['IsClosed', 'RUIAN_IBO', 'RIMSA_VYSKA',
-                            'STRECHA_KOD', 'PATA_SEG_VYSKA', 'ABS_SEG_VYSKA']
+    # fields_to_be_deleted = ['IsClosed', 'RUIAN_IBO', 'RIMSA_VYSKA',
+    #                         'STRECHA_KOD', 'PATA_SEG_VYSKA', 'ABS_SEG_VYSKA']
     geoms = ['PolygonZ', 'Multipatch']
 
     # setup file logging
@@ -176,14 +176,14 @@ def main(log_dir_path: str, location_root_folder_paths: str, output_mtp_workspac
             path_to_polygon_z_fc = os.path.join(
                 polygon_z_gdb, poly_dataset_name, poly_z_fc_name)
 
-            try:
-                # Loop through the list of fields and delete each one
-                for field in fields_to_be_deleted:
-                    arcpy.DeleteField_management(
-                        mtp_attrs_in_new_workspace, field)
-                log_it("Fields deleted successfully.", 'info', __name__)
-            except Exception as e:
-                log_it("An error occurred: " + str(e), 'warning', __name__)
+            # try:
+            #     # Loop through the list of fields and delete each one
+            #     for field in fields_to_be_deleted:
+            #         arcpy.DeleteField_management(
+            #             mtp_attrs_in_new_workspace, field)
+            #     log_it("Fields deleted successfully.", 'info', __name__)
+            # except Exception as e:
+            #     log_it("An error occurred: " + str(e), 'warning', __name__)
 
             arcpy.management.JoinField(mtp_attrs_in_new_workspace, key_field, path_to_polygon_z_fc,
                                        key_field, fields_to_be_joined)  # join attrs from polygon z fc to mtp fc
