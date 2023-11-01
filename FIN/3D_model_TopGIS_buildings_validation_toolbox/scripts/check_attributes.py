@@ -88,9 +88,6 @@ def log_out_problematic_features(problematic_features: dict, column_dicts) -> No
 
 
 
-
-
-
 def decide_rimsa_column_name(fc:dict) -> str:
     conflicting_col_name = 'RIMSA_VYSKA'
     if 'HORIZ_VYSKA' in fc.keys():

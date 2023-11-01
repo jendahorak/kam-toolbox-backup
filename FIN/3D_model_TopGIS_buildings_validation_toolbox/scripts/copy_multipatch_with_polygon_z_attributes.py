@@ -1,11 +1,12 @@
+from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms, get_gdb_path_3D_geoms_multiple
+# log_it printuje jak do arcgis console tak do souboru
+from toolbox_utils.messages_print import aprint, log_it, setup_logging
 import os
 import sys
 import arcpy
 import logging
 from typing import (List, Union)
 numeric = Union[int, float]
-from toolbox_utils.messages_print import aprint, log_it, setup_logging # log_it printuje jak do arcgis console tak do souboru
-from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms, get_gdb_path_3D_geoms_multiple
 
 
 class CopyMultipatchWithPolygonZAttributes(object):
@@ -42,7 +43,6 @@ class CopyMultipatchWithPolygonZAttributes(object):
             multiValue='True'
         )
 
-
         output_mtp_workspace = arcpy.Parameter(
             name="output_mtp_dir",
             displayName="Output Workspace (gdb) for multipatch featureclasses with attributes:",
@@ -54,15 +54,16 @@ class CopyMultipatchWithPolygonZAttributes(object):
         )
 
         output_mtp_workspace.filter.list = ["Local Database"]
-        log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
-        output_mtp_workspace.value = os.path.join(os.path.join(os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath), 'DATA'),'Multipatch_attributes.gdb')
+        log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(
+            os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
+        output_mtp_workspace.value = os.path.join(os.path.join(os.path.dirname(
+            arcpy.mp.ArcGISProject("CURRENT").filePath), 'DATA'), 'Multipatch_attributes.gdb')
 
-        params = [log_file_path, root_dir_lokalita_multiple, output_mtp_workspace]
-
+        params = [log_file_path, root_dir_lokalita_multiple,
+                  output_mtp_workspace]
 
         return params
 
-    
     def isLicensed(self):
         return True
 
@@ -81,18 +82,19 @@ class CopyMultipatchWithPolygonZAttributes(object):
         """Process the parameters"""
         param_values = (p.valueAsText for p in parameters)
         try:
-            main(*param_values) 
+            main(*param_values)
         except Exception as err:
             arcpy.AddError(err)
             sys.exit(1)
         return
+
 
 def init_logging(log_dir_path: str) -> None:
     '''
     initializes logging instance (logger object, format, log_file locatio etc.) for current tool
     '''
     class_name = CopyMultipatchWithPolygonZAttributes().name.replace(' ', '_')
-    setup_logging(log_dir_path,class_name, __name__)
+    setup_logging(log_dir_path, class_name, __name__)
 
 
 # next 3 functions are very prasácký
@@ -103,8 +105,9 @@ def get_fc_from_gdb_within_dataset(gdb_path: str) -> str:
     arcpy.env.workspace = gdb_path
 
     for dat in arcpy.ListDatasets():
-        for fc in arcpy.ListFeatureClasses('','', dat):
+        for fc in arcpy.ListFeatureClasses('', '', dat):
             return fc
+
 
 def get_dataset_from_gdb(gdb_path: str) -> str:
     '''
@@ -114,6 +117,7 @@ def get_dataset_from_gdb(gdb_path: str) -> str:
 
     for dat in arcpy.ListDatasets():
         return dat
+
 
 def get_fc_from_gdb_direct(gdb_path, fc_name=None) -> str:
     '''
@@ -130,36 +134,62 @@ def main(log_dir_path: str, location_root_folder_paths: str, output_mtp_workspac
     Main runtime. Creates copy multipatch feature class in chosen workspace (gdb) and joins given attribute information to it from equivalent PolygonZ featureclass. 
     '''
 
-    fields_to_be_joined = ['RUIAN_IBO', 'STRECHA_KOD', 'PATA_SEG_VYSKA', 'HORIZ_VYSKA', 'ABS_SEG_VYSKA']
+    fields_to_be_joined = ['RUIAN_IBO', 'STRECHA_KOD',
+                           'PATA_SEG_VYSKA', 'HORIZ_VYSKA', 'ABS_SEG_VYSKA']
+    fields_to_be_deleted = ['IsClosed', 'RUIAN_IBO', 'RIMSA_VYSKA',
+                            'STRECHA_KOD', 'PATA_SEG_VYSKA', 'ABS_SEG_VYSKA']
     geoms = ['PolygonZ', 'Multipatch']
 
     # setup file logging
     init_logging(log_dir_path)
 
-    for location_folder in location_root_folder_paths.split(';'): # parse out multiple parameters (multiple folder paths)
-        polygon_z_gdb, multipatch_gdb = get_gdb_path_3D_geoms_multiple(location_folder, geoms, __name__)
+    # parse out multiple parameters (multiple folder paths)
+    for location_folder in location_root_folder_paths.split(';'):
+        polygon_z_gdb, multipatch_gdb = get_gdb_path_3D_geoms_multiple(
+            location_folder, geoms, __name__)
 
-        log_it(f'{"-"*100}','info', __name__)
-        
-        poly_dataset_name = get_dataset_from_gdb(polygon_z_gdb) # name of first Polygon_Z dataset
-        poly_z_fc_name = get_fc_from_gdb_within_dataset(polygon_z_gdb) # name of first polygon z featureclass 
-        mtp_fc = get_fc_from_gdb_within_dataset(multipatch_gdb) # name of first mtp fc 
-        mtp_fc_name = f'{mtp_fc}_attrs' # name of new fc with joined attrs
-        key_field = 'ID_SEG' # id field on which join will be based on
+        log_it(f'{"-"*100}', 'info', __name__)
+
+        poly_dataset_name = get_dataset_from_gdb(
+            polygon_z_gdb)  # name of first Polygon_Z dataset
+        poly_z_fc_name = get_fc_from_gdb_within_dataset(
+            polygon_z_gdb)  # name of first polygon z featureclass
+        mtp_fc = get_fc_from_gdb_within_dataset(
+            multipatch_gdb)  # name of first mtp fc
+        mtp_fc_name = f'{mtp_fc}_attrs'  # name of new fc with joined attrs
+        key_field = 'ID_SEG'  # id field on which join will be based on
 
         if get_fc_from_gdb_direct(output_mtp_workspace, mtp_fc_name) == None:
             arcpy.env.workspace = multipatch_gdb
-            log_it(f"CURRENT WORKSPACE: {arcpy.env.workspace}",'info',__name__)
+            log_it(
+                f"CURRENT WORKSPACE: {arcpy.env.workspace}", 'info', __name__)
 
-            arcpy.conversion.FeatureClassToFeatureClass(mtp_fc, output_mtp_workspace, mtp_fc_name) # create copy of mtp fc
-            log_it(f'Copy FeatureClass {mtp_fc} created in {output_mtp_workspace}', 'info', __name__)
-            
-            mtp_attrs_in_new_workspace = get_fc_from_gdb_direct(output_mtp_workspace, fc_name=mtp_fc_name) # change working env and get name of new copied mtp fc
-            path_to_polygon_z_fc = os.path.join(polygon_z_gdb, poly_dataset_name, poly_z_fc_name) # build path to original polygon z fc with attributes to join to mtp 
+            arcpy.conversion.FeatureClassToFeatureClass(
+                mtp_fc, output_mtp_workspace, mtp_fc_name)  # create copy of mtp fc
+            log_it(
+                f'Copy FeatureClass {mtp_fc} created in {output_mtp_workspace}', 'info', __name__)
 
-            arcpy.management.JoinField(mtp_attrs_in_new_workspace, key_field, path_to_polygon_z_fc, key_field, fields_to_be_joined) # join attrs from polygon z fc to mtp fc
-            log_it(f'Attributes {fields_to_be_joined} joined to {mtp_attrs_in_new_workspace}', 'info', __name__)
-        else: 
+            # change working env and get name of new copied mtp fc
+            mtp_attrs_in_new_workspace = get_fc_from_gdb_direct(
+                output_mtp_workspace, fc_name=mtp_fc_name)
+            # build path to original polygon z fc with attributes to join to mtp
+            path_to_polygon_z_fc = os.path.join(
+                polygon_z_gdb, poly_dataset_name, poly_z_fc_name)
+
+            try:
+                # Loop through the list of fields and delete each one
+                for field in fields_to_be_deleted:
+                    arcpy.DeleteField_management(
+                        mtp_attrs_in_new_workspace, field)
+                log_it("Fields deleted successfully.", 'info', __name__)
+            except Exception as e:
+                log_it("An error occurred: " + str(e), 'warning', __name__)
+
+            arcpy.management.JoinField(mtp_attrs_in_new_workspace, key_field, path_to_polygon_z_fc,
+                                       key_field, fields_to_be_joined)  # join attrs from polygon z fc to mtp fc
+            log_it(
+                f'Attributes {fields_to_be_joined} joined to {mtp_attrs_in_new_workspace}', 'info', __name__)
+        else:
             log_it(f'{mtp_fc_name} already exists in chosen workspace:\n{output_mtp_workspace}\n{mtp_fc_name} will not be created', 'warning', __name__)
 
 ###################################################
