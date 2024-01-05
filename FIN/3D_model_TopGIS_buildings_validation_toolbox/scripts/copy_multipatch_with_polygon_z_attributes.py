@@ -58,7 +58,7 @@ class CopyMultipatchWithPolygonZAttributes(object):
         log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(
             os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
 
-        output_mtp_workspace = get_config_data('multipatch')
+        # output_mtp_workspace.value = get_config_data('multipatch')
 
         params = [log_file_path, root_dir_lokalita_multiple,
                   output_mtp_workspace]

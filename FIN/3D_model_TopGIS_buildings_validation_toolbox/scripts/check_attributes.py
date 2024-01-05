@@ -1,8 +1,12 @@
-import os, sys, arcpy, logging
+from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms
+from toolbox_utils.messages_print import aprint, log_it, setup_logging
+import os
+import sys
+import arcpy
+import logging
 from typing import (List, Union)
 numeric = Union[int, float]
-from toolbox_utils.messages_print import aprint, log_it, setup_logging
-from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms
+
 
 class CheckAttributeValues(object):
     '''
@@ -39,14 +43,13 @@ class CheckAttributeValues(object):
         )
 
         # TODO - otestovat na neulozenem projektu
-        log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
-        
+        log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(
+            os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
 
         params = [log_file_path, root_dir_lokalita_multiple]
 
         return params
 
-    
     def isLicensed(self):
         return True
 
@@ -65,38 +68,41 @@ class CheckAttributeValues(object):
         """Process the parameters"""
         param_values = (p.valueAsText for p in parameters)
         try:
-            main(*param_values) 
+            main(*param_values)
         except Exception as err:
             arcpy.AddError(err)
             sys.exit(1)
         return
 
+
 def log_out_problematic_features(problematic_features: dict, column_dicts) -> None:
     if problematic_features:
         for problem_k, problem_v in problematic_features.items():
             if len(problem_v) == len(column_dicts):
-                log_it(f'Problem {problem_k} found in all features in featureclass', 'warning', __name__)
-            elif(len(problem_v) > 50):
-                log_it(f'Problem {problem_k} found in more than 50 ID_PLO: {problem_v[:50]}', 'warning', __name__)
+                log_it(
+                    f'Problem {problem_k} found in all features in featureclass', 'warning', __name__)
+            elif (len(problem_v) > 50):
+                log_it(
+                    f'Problem {problem_k} found in more than 50 ID_PLO: {problem_v[:50]}', 'warning', __name__)
                 log_it(f'Due to large amount, not all results have been prited into the console, please check the data manualy', 'warning', __name__)
             else:
-                log_it(f'Problem {problem_k} occured in ID_PLO: {problem_v}', 'warning', __name__)
-    
+                log_it(
+                    f'Problem {problem_k} occured in ID_PLO: {problem_v}', 'warning', __name__)
+
     else:
         log_it('Attribute values are correct', 'info', __name__)
     return
 
 
-
-def decide_rimsa_column_name(fc:dict) -> str:
+def decide_rimsa_column_name(fc: dict) -> str:
     conflicting_col_name = 'RIMSA_VYSKA'
     if 'HORIZ_VYSKA' in fc.keys():
         conflicting_col_name = 'HORIZ_VYSKA'
     return conflicting_col_name
 
-def check_codelist(feature, column, start, stop) -> bool:
-    return True if feature[f'{column}'] not in range(start,stop+1) else False
 
+def check_codelist(feature, column, start, stop) -> bool:
+    return True if feature[f'{column}'] not in range(start, stop+1) else False
 
 
 def evaluate_conds(conds, feature, problems):
@@ -105,12 +111,12 @@ def evaluate_conds(conds, feature, problems):
             problems.setdefault(cond_name, []).append(feature['ID_PLO'])
     return problems
 
+
 def check_conditions(data) -> dict:
     '''
     Checks defined conditions for given columns - return dictionary with faulty features 
     '''
     problems = {}
-
 
     for feature in data:
         conditions = {}
@@ -135,12 +141,14 @@ def check_conditions(data) -> dict:
 
         # Check if 'CAST_OBJEKTU' exists before adding its condition
         if 'CAST_OBJEKTU' in feature:
-            conditions['CAST_OBJEKTU CONTAINS INVALID VALUES'] = check_codelist(feature, 'CAST_OBJEKTU', 1, 5)
+            conditions['CAST_OBJEKTU CONTAINS INVALID VALUES'] = check_codelist(
+                feature, 'CAST_OBJEKTU', 1, 5)
 
         problems_out = evaluate_conds(conditions, feature, problems)
 
     return problems_out
-    
+
+
 def search_cursor_tuple_to_dict_colmn_name_keys(cursor, cols) -> List[dict]:
     ''' 
     creates list of dicts instead of list of tuples -> feature: {column_name: column value}
@@ -149,29 +157,33 @@ def search_cursor_tuple_to_dict_colmn_name_keys(cursor, cols) -> List[dict]:
     for row in cursor:
         row_dict = {}
         for col_i in range(len(row)):
-            row_dict[cols[col_i]] = row[col_i]                    
+            row_dict[cols[col_i]] = row[col_i]
         column_dicts.append(row_dict)
 
     return column_dicts
+
 
 def inspect_attributes(fc: str, cols: List[str]) -> None:
     '''
     Loop over all features of given feature class (fc) and specified columns.
     '''
 
-
     try:
         with arcpy.da.SearchCursor(fc, cols) as cursor:
-            column_dicts = search_cursor_tuple_to_dict_colmn_name_keys(cursor, cols)
-            log_out_problematic_features(check_conditions(column_dicts), column_dicts) 
+            column_dicts = search_cursor_tuple_to_dict_colmn_name_keys(
+                cursor, cols)
+            log_out_problematic_features(
+                check_conditions(column_dicts), column_dicts)
 
     # TODO - Dát tohle pryč - redundantni kdyz existuje check_feature_class_columns()
-    # check if column missing in fc 
+    # check if column missing in fc
     except RuntimeError:
         missing = set(cols) - set([str(x.name) for x in arcpy.ListFields(fc)])
-        log_it('!! Feature Class is missing one or more required collumns !!','warning',__name__)
-        log_it(f'{"Column" if len(missing) == 1 else "Columns"} {" ".join(map(str, missing))} {"is" if len(missing) == 1 else "are"} missing.','warning',__name__)
-        log_it(f'!! Attributes checking for {fc} aborted. Please repair {fc} !!','warning',__name__)
+        log_it('!! Feature Class is missing one or more required collumns !!',
+               'warning', __name__)
+        log_it(f'{"Column" if len(missing) == 1 else "Columns"} {" ".join(map(str, missing))} {"is" if len(missing) == 1 else "are"} missing.', 'warning', __name__)
+        log_it(
+            f'!! Attributes checking for {fc} aborted. Please repair {fc} !!', 'warning', __name__)
 
     pass
 
@@ -182,11 +194,13 @@ def check_feature_class_columns(fc, required_cols):
     extra_cols = existing_cols - set(required_cols)
 
     if missing_cols:
-        log_it(f"Missing columns in the feature class {fc}: {', '.join(missing_cols)}", 'warning', __name__)
+        log_it(
+            f"Missing columns in the feature class {fc}: {', '.join(missing_cols)}", 'warning', __name__)
         return False
 
     if extra_cols:
-        log_it(f"Extra columns found in the feature class {fc}: {', '.join(extra_cols)}", 'warning', __name__)
+        log_it(
+            f"Extra columns found in the feature class {fc}: {', '.join(extra_cols)}", 'warning', __name__)
         return False
 
     return True
@@ -197,38 +211,39 @@ def init_logging(log_dir_path: str) -> None:
     initializes logging instance (logger object, format, log_file locatio etc.) for current tool
     '''
     class_name = CheckAttributeValues().name.replace(' ', '_')
-    setup_logging(log_dir_path,class_name, __name__)
+    setup_logging(log_dir_path, class_name, __name__)
+
 
 def main(log_dir_path: str, location_root_folder_paths: str) -> None:
     '''
     Main runtime - establishes required columns, required geometry.
     # '''
 
-
     # TODO - NUTNE VYRESIT V DATECH TAKHLE TO NEJDE
-    required_cols = ["OBJECTID", "RUIAN_IBO","ID_SEG", "ID_PLO", 'PATA_VYSKA', 'HREBEN_VYSKA', 'ABS_VYSKA','HORIZ_VYSKA', 'STRECHA_KOD', 'PATA_SEG_VYSKA', 'ABS_SEG_VYSKA', 'PLOCHA_KOD', 'CAST_OBJEKTU', 'SHAPE_Area', 'SHAPE_Length', 'SHAPE']
+    required_cols = ["OBJECTID", "RUIAN_IBO", "ID_SEG", "ID_PLO", 'PATA_VYSKA', 'HREBEN_VYSKA', 'ABS_VYSKA', 'HORIZ_VYSKA',
+                     'STRECHA_KOD', 'PATA_SEG_VYSKA', 'ABS_SEG_VYSKA', 'PLOCHA_KOD', 'CAST_OBJEKTU', 'SHAPE_Area', 'SHAPE_Length', 'SHAPE']
     geoms = ['PolygonZ', 'Multipatch']
 
     # setup file logging
     init_logging(log_dir_path)
 
-    for location_folder in location_root_folder_paths.split(';'): # parse out multiple parameters (multiple folder paths)
-        gdb = get_gdb_path_3D_geoms(location_folder, geoms[0]) 
-        log_it(f'{"-"*100}','info', __name__)
-        log_it(f"CURRENT GEODATABASE: {gdb}",'info',__name__)
+    # parse out multiple parameters (multiple folder paths)
+    for location_folder in location_root_folder_paths.split(';'):
+        gdb = get_gdb_path_3D_geoms(location_folder, geoms[0])
+        log_it(f'{"-"*100}', 'info', __name__)
+        log_it(f"CURRENT GEODATABASE: {gdb}", 'info', __name__)
 
         arcpy.env.workspace = gdb
         datasets = arcpy.ListDatasets()
 
         for dat in datasets:
             for fc in arcpy.ListFeatureClasses('', '', dat):
-                
-                if check_feature_class_columns(fc, required_cols): 
+
+                if check_feature_class_columns(fc, required_cols):
                     inspect_attributes(fc=fc, cols=required_cols)
                 else:
                     return
 
-    
 
 ###################################################
 ############# Run the tool from IDE ###############

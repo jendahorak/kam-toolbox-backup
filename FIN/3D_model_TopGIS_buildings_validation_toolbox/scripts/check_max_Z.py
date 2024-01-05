@@ -1,4 +1,4 @@
-from toolbox_utils.config_handler import get_config_data
+# from toolbox_utils.config_handler import get_config_data
 from toolbox_utils.clear_selection import clear_selection
 from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms, get_gdb_path_3D_geoms_multiple
 # log_it printuje jak do arcgis console tak do souboru
@@ -50,7 +50,7 @@ class CheckMaxZ(object):
         input_mtp_workspace.filter.list = ["Local Database"]
         log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(
             os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
-        input_mtp_workspace = get_config_data('multipatch')
+        # input_mtp_workspace.value = get_config_data('multipatch')
 
         params = [log_file_path, input_mtp_workspace]
 
