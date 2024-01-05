@@ -114,23 +114,25 @@ def main(log_dir_path: str, location_root_folder_paths: str, destination_folder:
     log_it(
         f'Log files going to be save into: {log_dir_path}', 'info', __name__)
 
-    user_folder_flag = False
-
     if destination_folder is None:
         data_folder = os.path.join(os.path.dirname(
             arcpy.mp.ArcGISProject("CURRENT").filePath), 'DATA')
         createFolder(data_folder)
     else:
-        user_folder_flag = True
         data_folder = destination_folder
 
     config = {
-        "default": data_folder,
-        "user": data_folder if user_folder_flag else None
+        "default_path": data_folder,
     }
 
-    with open('config.json', 'w') as f:
+    config_path = os.path.join(os.path.dirname(
+        arcpy.mp.ArcGISProject("CURRENT").filePath), 'config.json')
+
+    with open(config_path, 'w') as f:
         json.dump(config, f)
+
+    log_it(
+        f'Created config file at {config_path}', 'info', __name__)
 
     arcpy.management.CreateFileGDB(data_folder, 'PolygonZ_DMR_attributes')
     log_it(
