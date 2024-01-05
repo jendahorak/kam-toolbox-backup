@@ -1,6 +1,6 @@
 from toolbox_utils.clear_selection import clear_selection
 from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms, get_gdb_path_3D_geoms_multiple
-# from toolbox_utils.config_handler import get_config_data
+from toolbox_utils.config_handler import get_config_data
 # log_it printuje jak do arcgis console tak do souboru
 from toolbox_utils.messages_print import aprint, log_it, setup_logging
 import os
@@ -68,7 +68,10 @@ class CheckFlyingBuildings(object):
         log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(
             os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
 
-        # output_PolyZ_workspace.value = get_config_data('polygonz')
+        config_path = os.path.join(os.path.dirname(
+            arcpy.mp.ArcGISProject("CURRENT").filePath), 'config.json')
+
+        output_PolyZ_workspace.value = get_config_data('polygonz', config_path)
 
         input_ground_DMR.value = r"I:\01_Data\02_Prirodni_pomery\04_Vyskopis\Brno\DMR_DMT\TOPGIS\2019\04_GIS\rastr\rastr\DMT2019\DTM_2019_L_025m.tif"
         output_PolyZ_workspace.filter.list = ["Local Database"]

@@ -110,7 +110,6 @@ def main(log_dir_path: str, location_root_folder_paths: str, destination_folder:
 
     # setup file logging
     init_logging(log_dir_path)
-
     log_it(
         f'Log files going to be save into: {log_dir_path}', 'info', __name__)
 

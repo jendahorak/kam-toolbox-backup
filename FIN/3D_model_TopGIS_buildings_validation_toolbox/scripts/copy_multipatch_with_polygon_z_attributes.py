@@ -5,6 +5,7 @@ from toolbox_utils.messages_print import aprint, log_it, setup_logging
 import os
 import sys
 import arcpy
+import json
 import logging
 from typing import (List, Union)
 numeric = Union[int, float]
@@ -58,7 +59,10 @@ class CopyMultipatchWithPolygonZAttributes(object):
         log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(
             os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
 
-        # output_mtp_workspace.value = get_config_data('multipatch')
+        config_path = os.path.join(os.path.dirname(
+            arcpy.mp.ArcGISProject("CURRENT").filePath), 'config.json')
+
+        output_mtp_workspace.value = get_config_data('multipatch', config_path)
 
         params = [log_file_path, root_dir_lokalita_multiple,
                   output_mtp_workspace]
@@ -72,6 +76,7 @@ class CopyMultipatchWithPolygonZAttributes(object):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
+
         return
 
     def updateMessages(self, parameters):
