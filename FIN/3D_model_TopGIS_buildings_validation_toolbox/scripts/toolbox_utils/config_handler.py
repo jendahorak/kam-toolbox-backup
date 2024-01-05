@@ -1,9 +1,9 @@
+# import os
 # import json
-# from messages_print import log_it
+# from toolbox_utils.messages_print import log_it
 
 
 def get_config_data(geometry_type):
-    return geometry_type
     # try:
     #     with open('config.json') as f:
     #         config = json.load(f)
@@ -28,4 +28,4 @@ def get_config_data(geometry_type):
     # else:
     #     log_it(f'Error: Wrong geometry type specified.', 'error', __name__)
 
-# output_PolyZ_workspace
+    return geometry_type
