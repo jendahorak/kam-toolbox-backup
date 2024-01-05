@@ -56,6 +56,7 @@ class CopyMultipatchWithPolygonZAttributes(object):
         output_mtp_workspace.filter.list = ["Local Database"]
         log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(
             os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
+
         output_mtp_workspace.value = os.path.join(os.path.join(os.path.dirname(
             arcpy.mp.ArcGISProject("CURRENT").filePath), 'DATA'), 'Multipatch_attributes.gdb')
 

@@ -1,8 +1,12 @@
-import os, sys, arcpy
+from toolbox_utils.messages_print import log_it, setup_logging
+import os
+import sys
+import arcpy
 import shutil
+import json
 from typing import (List, Union)
 numeric = Union[int, float]
-from toolbox_utils.messages_print import log_it, setup_logging
+
 
 class CopyFoldersForValidaton(object):
     '''
@@ -48,16 +52,14 @@ class CopyFoldersForValidaton(object):
             multiValue='False',
         )
 
-
-
         # TODO - otestovat na neulozenem projektu
-        log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
-        
+        log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(
+            os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
+
         params = [log_file_path, root_dir_lokalita_multiple, destination_folder]
 
         return params
 
-    
     def isLicensed(self):
         return True
 
@@ -76,28 +78,32 @@ class CopyFoldersForValidaton(object):
         """Process the parameters"""
         param_values = (p.valueAsText for p in parameters)
         try:
-            main(*param_values) 
+            main(*param_values)
         except Exception as err:
             arcpy.AddError(err)
             sys.exit(1)
         return
+
 
 def init_logging(log_dir_path: str) -> None:
     '''
     initializes logging instance (logger object, format, log_file locatio etc.) for current tool
     '''
     class_name = CopyFoldersForValidaton().name.replace(' ', '_')
-    setup_logging(log_dir_path,class_name, __name__)
+    setup_logging(log_dir_path, class_name, __name__)
+
 
 def createFolder(fp):
     if not os.path.exists(fp):
         os.makedirs(fp)
-        log_it(f"Folder '{os.path.basename(fp)}' created successfully.", 'info', __name__)
+        log_it(
+            f"Folder '{os.path.basename(fp)}' created successfully.", 'info', __name__)
     else:
-        log_it(f"Folder '{os.path.basename(fp)}' already exists. Chosen folders will be copied to it.", 'warning', __name__)
+        log_it(
+            f"Folder '{os.path.basename(fp)}' already exists. Chosen folders will be copied to it.", 'warning', __name__)
 
 
-def main(log_dir_path: str, location_root_folder_paths: str, destination_folder:str = None) -> None:
+def main(log_dir_path: str, location_root_folder_paths: str, destination_folder: str = None) -> None:
     '''
     Main runtime - establishes required columns, required geometry.
     # '''
@@ -105,39 +111,53 @@ def main(log_dir_path: str, location_root_folder_paths: str, destination_folder:
     # setup file logging
     init_logging(log_dir_path)
 
-    
-    log_it(f'Log files going to be save into: {log_dir_path}', 'info', __name__)
+    log_it(
+        f'Log files going to be save into: {log_dir_path}', 'info', __name__)
 
+    user_folder_flag = False
 
     if destination_folder is None:
-        data_folder = os.path.join(os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath), 'DATA')
+        data_folder = os.path.join(os.path.dirname(
+            arcpy.mp.ArcGISProject("CURRENT").filePath), 'DATA')
         createFolder(data_folder)
     else:
+        user_folder_flag = True
         data_folder = destination_folder
 
+    config = {
+        "default": data_folder,
+        "user": data_folder if user_folder_flag else None
+    }
+
+    with open('config.json', 'w') as f:
+        json.dump(config, f)
 
     arcpy.management.CreateFileGDB(data_folder, 'PolygonZ_DMR_attributes')
-    log_it(f'Output GDB for tool 4. PolygonZ manipulation - Check difference between geometry and DMR. created in .\DATA', 'info', __name__)
+    log_it(
+        f'Output GDB for tool 4. PolygonZ manipulation - Check difference between geometry and DMR. created in {data_folder}', 'info', __name__)
 
     arcpy.management.CreateFileGDB(data_folder, 'Multipatch_attributes')
-    log_it(f'Output GDB for tool 5. Multipatch manipulation - Copy multipatch and join PolygonZ attributes. created in .\DATA', 'info', __name__)
+    log_it(
+        f'Output GDB for tool 5. Multipatch manipulation - Copy multipatch and join PolygonZ attributes. created in {data_folder}', 'info', __name__)
 
-
-
-    for location_folder in location_root_folder_paths.split(';'): # parse out multiple parameters (multiple folder paths)
+    # parse out multiple parameters (multiple folder paths)
+    for location_folder in location_root_folder_paths.split(';'):
         dest = os.path.join(data_folder, os.path.basename(location_folder))
 
         try:
             # Copy the entire folder and its contents
             shutil.copytree(location_folder, dest)
-            log_it(f"Folder '{os.path.basename(location_folder)}' copied to '{dest}'", 'info', __name__)
+            log_it(
+                f"Folder '{os.path.basename(location_folder)}' copied to '{dest}'", 'info', __name__)
 
         except Exception as e:
             if "Permission denied" in str(e):
                 # Catch the Permission denied error and log a custom message
-                log_it(f"Permission denied when copying folder: {str(e)} /n original layer is probably opened and being edited containing .lock", 'warning', __name__)
+                log_it(
+                    f"Permission denied when copying folder: {str(e)} /n original layer is probably opened and being edited containing .lock", 'warning', __name__)
             else:
-                log_it(f"Error copying folder {os.path.basename(location_folder)}: {str(e)}", 'warning', __name__)
+                log_it(
+                    f"Error copying folder {os.path.basename(location_folder)}: {str(e)}", 'warning', __name__)
 
 ###################################################
 ############# Run the tool from IDE ###############
