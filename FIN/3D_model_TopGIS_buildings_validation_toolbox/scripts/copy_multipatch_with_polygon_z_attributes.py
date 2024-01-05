@@ -1,4 +1,5 @@
 from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms, get_gdb_path_3D_geoms_multiple
+from toolbox_utils.config_handler import get_config_data
 # log_it printuje jak do arcgis console tak do souboru
 from toolbox_utils.messages_print import aprint, log_it, setup_logging
 import os
@@ -57,8 +58,7 @@ class CopyMultipatchWithPolygonZAttributes(object):
         log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(
             os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
 
-        output_mtp_workspace.value = os.path.join(os.path.join(os.path.dirname(
-            arcpy.mp.ArcGISProject("CURRENT").filePath), 'DATA'), 'Multipatch_attributes.gdb')
+        output_mtp_workspace = get_config_data('multipatch')
 
         params = [log_file_path, root_dir_lokalita_multiple,
                   output_mtp_workspace]

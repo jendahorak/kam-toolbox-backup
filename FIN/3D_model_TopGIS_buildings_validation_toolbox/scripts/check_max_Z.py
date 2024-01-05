@@ -1,14 +1,18 @@
+from toolbox_utils.config_handler import get_config_data
+from toolbox_utils.clear_selection import clear_selection
+from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms, get_gdb_path_3D_geoms_multiple
+# log_it printuje jak do arcgis console tak do souboru
+from toolbox_utils.messages_print import aprint, log_it, setup_logging
 import os
 import sys
 import arcpy
 import logging
 from typing import (List, Union)
 numeric = Union[int, float]
-from toolbox_utils.messages_print import aprint, log_it, setup_logging # log_it printuje jak do arcgis console tak do souboru
-from toolbox_utils.gdb_getter import get_gdb_path_3D_geoms, get_gdb_path_3D_geoms_multiple
-from toolbox_utils.clear_selection import clear_selection
 
 # TODO - optional file logging
+
+
 class CheckMaxZ(object):
     '''
     Class as a arcgis tool abstraction in python
@@ -43,19 +47,17 @@ class CheckMaxZ(object):
             multiValue='False'
         )
 
-        
         input_mtp_workspace.filter.list = ["Local Database"]
-        log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
-        input_mtp_workspace.value = os.path.join(os.path.join(os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath), 'DATA'),'Multipatch_attributes.gdb')
+        log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(
+            os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
+        input_mtp_workspace = get_config_data('multipatch')
 
         params = [log_file_path, input_mtp_workspace]
 
         return params
 
-    
     def isLicensed(self):
         return True
-
 
     def updateParameters(self, parameters):
         """Modify the values and properties of parameters before internal
@@ -68,12 +70,12 @@ class CheckMaxZ(object):
 
         input_mtp_gdb_obj = parameters[1]
         if input_mtp_gdb_obj.altered:
-            input_mtp_gdb_obj.setWarningMessage('This tool will modify input multipatch data by adding columns')
-
+            input_mtp_gdb_obj.setWarningMessage(
+                'This tool will modify input multipatch data by adding columns')
 
         # Nefunguje protoze by to muselo prochazet i data sety a muselo by to být univerzální TODO do budoucna - udělat modul Get FC from GDB kdy je jedno jestli je to zapouzdřený v datasetu nebo ne.
         # input_mtp_gdb = parameters[1].valueAsText
-       
+
         # if input_mtp_gdb_obj.altered and input_mtp_gdb_obj.datatype == 'Workspace':
         #     arcpy.env.workspace = input_mtp_gdb
         #     fc_mtps = [fc for fc in arcpy.ListFeatureClasses(feature_type='Multipatch')]
@@ -81,7 +83,7 @@ class CheckMaxZ(object):
 
         #     existing_fields = []
         #     for fc in fc_mtps:
-        #         existing_fields.append('ABS_SEG_VYSKA' and 'ID_SEG' in [field.name for field in arcpy.ListFields(fc)]) 
+        #         existing_fields.append('ABS_SEG_VYSKA' and 'ID_SEG' in [field.name for field in arcpy.ListFields(fc)])
 
         #     input_mtp_gdb_obj.setErrorMessage(fc_mtps)
 
@@ -99,26 +101,27 @@ class CheckMaxZ(object):
         # #     parameters[1].setErrorMessage('Chosen workspace is empty or it doesnt contain required geometry (Multipatch)')
         # # else:
         # #     parameters[1].clearMessage()
-        
 
     def execute(self, parameters, messages):
         """Process the parameters"""
         param_values = (p.valueAsText for p in parameters)
         try:
-            main(*param_values) 
+            main(*param_values)
         except Exception as err:
             arcpy.AddError(err)
             sys.exit(1)
         return
+
 
 def init_logging(log_dir_path: str) -> None:
     '''
     initializes logging instance (logger object, format, log_file locatio etc.) for current tool
     '''
     class_name = CheckMaxZ().name.replace(' ', '_')
-    setup_logging(log_dir_path,class_name, __name__)
+    setup_logging(log_dir_path, class_name, __name__)
 
-def copy_mtp_for_analysis(input_mtp_workspace:str, output_mtp_workspace:str) -> None:
+
+def copy_mtp_for_analysis(input_mtp_workspace: str, output_mtp_workspace: str) -> None:
     '''
     Creates copy of every fc inside input workspace in output workspace. 
     '''
@@ -129,7 +132,8 @@ def copy_mtp_for_analysis(input_mtp_workspace:str, output_mtp_workspace:str) -> 
     log_it(f'featureclasses with same name as input fc in output workspace will be overwritten', 'warning', __name__)
 
     for fc in arcpy.ListFeatureClasses(feature_type='Multipatch'):
-        arcpy.conversion.FeatureClassToFeatureClass(fc, output_mtp_workspace,f'{fc}_analysis')
+        arcpy.conversion.FeatureClassToFeatureClass(
+            fc, output_mtp_workspace, f'{fc}_analysis')
 
     arcpy.env.overwriteOutput = False
 
@@ -138,8 +142,8 @@ def log_maxZ_result(ids: List, input_fc: str) -> None:
     if ids != []:
         log_it(f'FC: {input_fc} - Rows (ID_SEG: {ids})  have more than one meter differnece in ABS_SEG_VYSKA and Z_Max', 'warning', __name__)
     else:
-        log_it(f'FC: {input_fc} - No segments has more than one meter difference in ABS_SEG_VYSKA and Z_Max', 'info', __name__)
-
+        log_it(
+            f'FC: {input_fc} - No segments has more than one meter difference in ABS_SEG_VYSKA and Z_Max', 'info', __name__)
 
 
 def fieldExists(dataset: str, field_name: str) -> bool:
@@ -151,16 +155,17 @@ def fieldExists(dataset: str, field_name: str) -> bool:
 def max_z_check(input_fc):
     rows_with_faulty_Z = []
     required_fields = ['ABS_SEG_VYSKA', 'ID_SEG']
-    work_fields = ['ABS_SEG_VYSKA', 'Z_Max', 'Z_Max_ABS_SEG_VYSKA_diff', 'ID_SEG']
-    
+    work_fields = ['ABS_SEG_VYSKA', 'Z_Max',
+                   'Z_Max_ABS_SEG_VYSKA_diff', 'ID_SEG']
+
     are_there = []
     for f in required_fields:
-        are_there.append(fieldExists(input_fc, f)) 
-
+        are_there.append(fieldExists(input_fc, f))
 
     if all(i is True for i in are_there):
         arcpy.ddd.AddZInformation(input_fc, "Z_Max", '')
-        arcpy.management.AddField(input_fc, 'Z_Max_ABS_SEG_VYSKA_diff', 'DOUBLE')
+        arcpy.management.AddField(
+            input_fc, 'Z_Max_ABS_SEG_VYSKA_diff', 'DOUBLE')
         with arcpy.da.UpdateCursor(input_fc, work_fields) as cur:
             for row in cur:
                 # vypocita absolutni rozdil mezi ABS_SEG_VYSKA a Z_Max a ulozi do fieldu Z_Max_ABS_SEG_VYSKA_diff
@@ -174,9 +179,8 @@ def max_z_check(input_fc):
 
         log_maxZ_result(rows_with_faulty_Z, input_fc)
 
-    else:            
+    else:
         log_it(f'{input_fc} is missing ABS_SEG_VYSKA or ID_SEG field. Operation for {input_fc} aborted.', 'warning', __name__)
-
 
 
 def main(log_dir_path: str, input_mtp_workspace: str, *args) -> None:
@@ -194,18 +198,17 @@ def main(log_dir_path: str, input_mtp_workspace: str, *args) -> None:
                 clear_selection(fc)
                 log_it(fc, 'info', __name__)
                 max_z_check(fc)
-        else: 
+        else:
             log_it("Input Workspace doesnt cointain featureclasses with Multipatch geometry or doesnt have flat sturcture - please input GDB with flat structure ommit datasets (only featureclasses with Multipatch geometry)", 'error', __name__)
     else:
         # this should be imposible
         arcpy.AddError('Parameters werent specified.')
 
 
-
 ###################################################
 ############# Run the tool from IDE ###############
 
-## fake parametry
+# fake parametry
 # imtpw = r"I:\04_Hall_of_Fame\11_Honza_H\00_Projekty\12_3D_model_validation_refactoring\02_Input_Data\Broken_for_testing\mtp_with_attrs\mtp_attrs_43_broken.gdb"
 # iml = ''
 # omptw = r'I:\04_Hall_of_Fame\11_Honza_H\00_Projekty\12_3D_model_validation_refactoring\01_Developement\02_Output\new_output_workspaces\mtp_attrs_43_Z.gdb'

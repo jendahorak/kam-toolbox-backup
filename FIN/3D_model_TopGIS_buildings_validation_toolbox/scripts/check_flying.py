@@ -68,7 +68,7 @@ class CheckFlyingBuildings(object):
         log_file_path.value = os.path.join(os.path.dirname(os.path.dirname(
             os.path.dirname(arcpy.mp.ArcGISProject("CURRENT").filePath))), 'logs')
 
-        output_PolyZ_workspace = get_config_data()
+        output_PolyZ_workspace = get_config_data('polygonz')
 
         input_ground_DMR.value = r"I:\01_Data\02_Prirodni_pomery\04_Vyskopis\Brno\DMR_DMT\TOPGIS\2019\04_GIS\rastr\rastr\DMT2019\DTM_2019_L_025m.tif"
         output_PolyZ_workspace.filter.list = ["Local Database"]
