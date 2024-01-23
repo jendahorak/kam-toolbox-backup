@@ -112,6 +112,26 @@ def evaluate_conds(conds, feature, problems):
     return problems
 
 
+# nizky rimsy
+# rimsa_vyska_rel = (rimsa_vyska - pata_vyska)
+# abs_vyska_rel = (abs_vyska - pata_vyska)
+# rimsa_vyska_frac = (rimsa_vyska_rel / abs_vyska_rel)
+# mala_rimsa = (rimsa_vyska_frac < 0.2)
+# velka_rimsa = (rimsa_vyska_frac > 0.8)
+
+
+def calculate_rimsa_vyska_rel(rimsa_vyska_val, pata_vyska_val, abs_vyska_val) -> numeric:
+    rimsa_vyska_frac = (rimsa_vyska_val - pata_vyska_val) / (abs_vyska_val - pata_vyska_val)
+    return rimsa_vyska_frac
+
+
+def check_rimsa_vyska_rel_small(rimsa_vyska_frac) -> bool:
+    return rimsa_vyska_frac < 0.2
+
+def check_rimsa_vyska_rel_big(rimsa_vyska_frac) -> bool:
+    return rimsa_vyska_frac > 0.8
+
+
 def check_conditions(data) -> dict:
     '''
     Checks defined conditions for given columns - return dictionary with faulty features 
@@ -137,6 +157,8 @@ def check_conditions(data) -> dict:
                 'PATA_SEG_VYSKA >= HORIZ_VYSKA ("RIMSA_VYSKA")': feature['PATA_SEG_VYSKA'] >= feature[f'{conflicting_col_name}'],
                 'STRECHA_KOD CONTAINS INVALID VALUES': check_codelist(feature, 'STRECHA_KOD', 1, 7),
                 'PLOCHA_KOD CONTAINS INVALID VALUES': check_codelist(feature, 'PLOCHA_KOD', 1, 4),
+                'RIMSA_VYSKA HAS ABNORMALY SMALL VALUES': check_rimsa_vyska_rel_small(calculate_rimsa_vyska_rel(feature[f'{conflicting_col_name}'], feature['PATA_VYSKA'], feature['ABS_VYSKA'])),
+                'RIMSA_VYSKA HAS ABNORMALY BIG VALUES': check_rimsa_vyska_rel_big(calculate_rimsa_vyska_rel(feature[f'{conflicting_col_name}'], feature['PATA_VYSKA'], feature['ABS_VYSKA'])),
             }
 
         # Check if 'CAST_OBJEKTU' exists before adding its condition
