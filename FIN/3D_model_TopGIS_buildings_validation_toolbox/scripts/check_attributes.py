@@ -92,8 +92,8 @@ def log_out_problematic_features(problematic_features: dict, column_dicts) -> No
             #     log_it(f'Due to large amount, not all results have been prited into the console, please check the data manualy', 'warning', __name__)
             else:
                 if (has_duplicates(problem_v)):
-                    uniqued = set(problem_v)
-                    log_it(f'Problem {problem_k} occured for ID_SEG in {tuple(uniqued)}', 'warning', __name__)
+                    uniqued = tuple(set(problem_v))
+                    log_it(f'Problem {problem_k} occured for ID_SEG in {uniqued}', 'warning', __name__)
                 else:
                     log_it(f'Problem {problem_k} occured for ID_PLO in {tuple(problem_v)}', 'warning', __name__)
 
