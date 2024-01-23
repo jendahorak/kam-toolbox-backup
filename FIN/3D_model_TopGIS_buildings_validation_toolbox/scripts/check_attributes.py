@@ -75,6 +75,11 @@ class CheckAttributeValues(object):
         return
 
 
+def has_duplicates(lst):
+    return len(lst) != len(set(lst))
+
+
+
 def log_out_problematic_features(problematic_features: dict, column_dicts) -> None:
     if problematic_features:
         for problem_k, problem_v in problematic_features.items():
@@ -86,8 +91,11 @@ def log_out_problematic_features(problematic_features: dict, column_dicts) -> No
             #         f'Problem {problem_k} found in more than 50 ID_PLO: {problem_v[:50]}', 'warning', __name__)
             #     log_it(f'Due to large amount, not all results have been prited into the console, please check the data manualy', 'warning', __name__)
             else:
-                log_it(
-                    f'Problem {problem_k} occured in ID_PLO: {problem_v}', 'warning', __name__)
+                if (has_duplicates(problem_v)):
+                    uniqued = set(problem_v)
+                    log_it(f'Problem {problem_k} occured for ID_SEG in {tuple(uniqued)}', 'warning', __name__)
+                else:
+                    log_it(f'Problem {problem_k} occured for ID_PLO in {tuple(problem_v)}', 'warning', __name__)
 
     else:
         log_it('Attribute values are correct', 'info', __name__)
@@ -107,12 +115,11 @@ def check_codelist(feature, column, start, stop) -> bool:
 
 def evaluate_conds(conds, feature, problems):
     for cond_name, cond_val in conds.items():
-        log_it(f'{cond_name}: {cond_val}', 'info', __name__)
         if cond_val:
             if cond_name == 'RIMSA_VYSKA HAS ABNORMALY SMALL VALUES':
-                problems.setdefault(cond_name, []).append(feature['ID_SEG'])
+                problems.setdefault(cond_name, []).append(int(feature['ID_SEG']))
             else:
-                problems.setdefault(cond_name, []).append(feature['ID_PLO'])
+                problems.setdefault(cond_name, []).append(int(feature['ID_PLO']))    
             
     return problems
 
