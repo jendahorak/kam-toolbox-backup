@@ -81,10 +81,10 @@ def log_out_problematic_features(problematic_features: dict, column_dicts) -> No
             if len(problem_v) == len(column_dicts):
                 log_it(
                     f'Problem {problem_k} found in all features in featureclass', 'warning', __name__)
-            elif (len(problem_v) > 50):
-                log_it(
-                    f'Problem {problem_k} found in more than 50 ID_PLO: {problem_v[:50]}', 'warning', __name__)
-                log_it(f'Due to large amount, not all results have been prited into the console, please check the data manualy', 'warning', __name__)
+            # elif (len(problem_v) > 50):
+            #     log_it(
+            #         f'Problem {problem_k} found in more than 50 ID_PLO: {problem_v[:50]}', 'warning', __name__)
+            #     log_it(f'Due to large amount, not all results have been prited into the console, please check the data manualy', 'warning', __name__)
             else:
                 log_it(
                     f'Problem {problem_k} occured in ID_PLO: {problem_v}', 'warning', __name__)
@@ -107,21 +107,27 @@ def check_codelist(feature, column, start, stop) -> bool:
 
 def evaluate_conds(conds, feature, problems):
     for cond_name, cond_val in conds.items():
+        log_it(f'{cond_name}: {cond_val}', 'info', __name__)
         if cond_val:
-            problems.setdefault(cond_name, []).append(feature['ID_PLO'])
+            if cond_name == 'RIMSA_VYSKA HAS ABNORMALY SMALL VALUES':
+                problems.setdefault(cond_name, []).append(feature['ID_SEG'])
+            else:
+                problems.setdefault(cond_name, []).append(feature['ID_PLO'])
+            
     return problems
 
 
 def calculate_rimsa_vyska_rel(rimsa_vyska_val, pata_vyska_val, abs_vyska_val) -> numeric:
     rimsa_vyska_frac = (rimsa_vyska_val - pata_vyska_val) / (abs_vyska_val - pata_vyska_val)
+    # log_it(f'RIMSA_VYSKA_REL: {rimsa_vyska_frac}', 'info', __name__)
     return rimsa_vyska_frac
 
 
 def check_rimsa_vyska_rel_small(rimsa_vyska_frac) -> bool:
-    return rimsa_vyska_frac < 0.2
+    return rimsa_vyska_frac < 0.3
 
 def check_rimsa_vyska_rel_big(rimsa_vyska_frac) -> bool:
-    return rimsa_vyska_frac > 0.8
+    return rimsa_vyska_frac > 0.9
 
 # def check_rimsa_vyska_in_range(rimsa_vyska_frac, lower_bound, upper_bound) -> bool:
 #     return lower_bound <= rimsa_vyska_frac <= upper_bound
@@ -144,7 +150,7 @@ def check_conditions(data) -> dict:
                 conditions[f'NULL VALUES FOUND IN {col}'] = True
 
         if not has_null:
-            rimsa_vyska_frac = calculate_rimsa_vyska_rel(feature[f'{conflicting_col_name}'], feature['PATA_VYSKA'], feature['ABS_VYSKA'])
+            rimsa_vyska_frac = calculate_rimsa_vyska_rel(feature[f'{conflicting_col_name}'], feature['PATA_SEG_VYSKA'], feature['ABS_SEG_VYSKA'])
             conditions = {
                 'PATA_VYSKA >= ABS_VYSKA': feature['PATA_VYSKA'] >= feature['ABS_VYSKA'],
                 'PATA_VYSKA >= HREBEN_VYSKA': feature['PATA_VYSKA'] >= feature['HREBEN_VYSKA'],
@@ -154,7 +160,7 @@ def check_conditions(data) -> dict:
                 'STRECHA_KOD CONTAINS INVALID VALUES': check_codelist(feature, 'STRECHA_KOD', 1, 7),
                 'PLOCHA_KOD CONTAINS INVALID VALUES': check_codelist(feature, 'PLOCHA_KOD', 1, 4),
                 'RIMSA_VYSKA HAS ABNORMALY SMALL VALUES': check_rimsa_vyska_rel_small(rimsa_vyska_frac),
-                'RIMSA_VYSKA HAS ABNORMALY BIG VALUES': check_rimsa_vyska_rel_big(rimsa_vyska_frac),
+                # 'RIMSA_VYSKA HAS ABNORMALY BIG VALUES': check_rimsa_vyska_rel_big(rimsa_vyska_frac),
                 # 'RIMSA_VYSKA IS IN RANGE 0.3 - 0.7': check_rimsa_vyska_in_range(rimsa_vyska_frac, 0.3, 0.7),
             }   
 
