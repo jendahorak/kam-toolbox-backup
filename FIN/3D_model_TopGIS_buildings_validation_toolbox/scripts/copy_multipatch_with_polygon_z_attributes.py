@@ -128,7 +128,7 @@ def get_dataset_from_gdb(gdb_path: str) -> str:
 def get_fc_from_gdb_direct(gdb_path, fc_name=None) -> str:
     '''
     Returns first fc from given gdb or any with specified name fc_name.
-    '''
+    ''' 
     arcpy.env.workspace = gdb_path
 
     for fc in arcpy.ListFeatureClasses(fc_name):
@@ -142,8 +142,7 @@ def main(log_dir_path: str, location_root_folder_paths: str, output_mtp_workspac
 
     fields_to_be_joined = ['RUIAN_IBO', 'STRECHA_KOD',
                            'PATA_SEG_VYSKA', 'HORIZ_VYSKA', 'ABS_SEG_VYSKA']
-    # fields_to_be_deleted = ['IsClosed', 'RUIAN_IBO', 'RIMSA_VYSKA',
-    #                         'STRECHA_KOD', 'PATA_SEG_VYSKA', 'ABS_SEG_VYSKA']
+
     geoms = ['PolygonZ', 'Multipatch']
 
     # setup file logging
@@ -160,6 +159,8 @@ def main(log_dir_path: str, location_root_folder_paths: str, output_mtp_workspac
             polygon_z_gdb)  # name of first Polygon_Z dataset
         poly_z_fc_name = get_fc_from_gdb_within_dataset(
             polygon_z_gdb)  # name of first polygon z featureclass
+        
+        
         mtp_fc = get_fc_from_gdb_within_dataset(
             multipatch_gdb)  # name of first mtp fc
         mtp_fc_name = f'{mtp_fc}_attrs'  # name of new fc with joined attrs
@@ -170,6 +171,7 @@ def main(log_dir_path: str, location_root_folder_paths: str, output_mtp_workspac
             log_it(
                 f"CURRENT WORKSPACE: {arcpy.env.workspace}", 'info', __name__)
 
+           
             arcpy.conversion.FeatureClassToFeatureClass(
                 mtp_fc, output_mtp_workspace, mtp_fc_name)  # create copy of mtp fc
             log_it(
@@ -182,14 +184,6 @@ def main(log_dir_path: str, location_root_folder_paths: str, output_mtp_workspac
             path_to_polygon_z_fc = os.path.join(
                 polygon_z_gdb, poly_dataset_name, poly_z_fc_name)
 
-            # try:
-            #     # Loop through the list of fields and delete each one
-            #     for field in fields_to_be_deleted:
-            #         arcpy.DeleteField_management(
-            #             mtp_attrs_in_new_workspace, field)
-            #     log_it("Fields deleted successfully.", 'info', __name__)
-            # except Exception as e:
-            #     log_it("An error occurred: " + str(e), 'warning', __name__)
 
             arcpy.management.JoinField(mtp_attrs_in_new_workspace, key_field, path_to_polygon_z_fc,
                                        key_field, fields_to_be_joined)  # join attrs from polygon z fc to mtp fc

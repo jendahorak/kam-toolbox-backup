@@ -253,7 +253,7 @@ def main(log_dir_path: str, location_root_folder_paths: str) -> None:
 
     # TODO - NUTNE VYRESIT V DATECH TAKHLE TO NEJDE
     required_cols = ["OBJECTID", "RUIAN_IBO", "ID_SEG", "ID_PLO", 'PATA_VYSKA', 'HREBEN_VYSKA', 'ABS_VYSKA', 'HORIZ_VYSKA',
-                     'STRECHA_KOD', 'PATA_SEG_VYSKA', 'ABS_SEG_VYSKA', 'PLOCHA_KOD', 'CAST_OBJEKTU', 'SHAPE_Area', 'SHAPE_Length', 'SHAPE']
+                     'STRECHA_KOD', 'PATA_SEG_VYSKA', 'ABS_SEG_VYSKA', 'PLOCHA_KOD', 'CAST_OBJEKTU']
     geoms = ['PolygonZ', 'Multipatch']
 
     # setup file logging
